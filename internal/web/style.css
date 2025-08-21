@@ -1,0 +1,196 @@
+body {
+    font-family: Arial, sans-serif;
+    background: #181b22;
+    color: #f1f1f1;
+    margin: 0;
+    padding: 0 2em; /* Remove top padding; keep side padding */
+    padding-top: 7em; /* Reserve space for fixed nav bar */
+}
+
+/* Fixed full-width nav bar at top */
+nav {
+    width: 100vw;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: #1f2332;
+    padding: 1.5em 2em 1em 2em;
+    box-shadow: 0 4px 20px #181b2233;
+    z-index: 1000;
+}
+nav.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+/* for .app-version if using the class above */
+.app-version {
+    font-size: 1em;
+    color: #81aaff;
+    opacity: 0.77;
+    margin-left: 2em;
+    margin-right: 5rem;
+}
+nav h1 {
+    margin: 0;
+    color: #81aaff;
+    letter-spacing: 0.04em;
+    font-size: 2em;
+}
+
+/* Run button styles */
+button {
+    background: #213b53;
+    color: #ffffff;
+    border: 1px solid #446a9f;
+    border-radius: 4px;
+    padding: 0.5em 1.5em;
+    font-size: 1em;
+    font-weight: 600;
+    cursor: pointer;
+    margin-bottom: 1em;
+    transition: background 0.15s, border 0.15s, box-shadow 0.1s;
+    box-shadow: 0 2px 6px 0 #0e101580;
+}
+button:hover,
+button:focus {
+    background: #315c8a;
+    border-color: #81aaff;
+    outline: none;
+}
+/* Obvious style when disabled due to job running */
+button.disabled-running,
+button:disabled {
+    background: #4e4265 !important;
+    color: #9f8cff !important;
+    border: 2px solid #d6577f !important;
+    cursor: not-allowed !important;
+    opacity: 1 !important;
+    box-shadow: 0 0 8px #d6577faa;
+    text-shadow: 0 1px 3px #181b22cc;
+}
+
+/* Spinner styles */
+.spinner {
+    display: inline-block;
+    width: 1.4em;
+    height: 1.4em;
+    margin-left: 0.8em;
+    vertical-align: middle;
+    position: relative;
+}
+.spinner::after {
+    content: " ";
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 3px solid #81aaff;
+    border-color: #81aaff transparent #d6577f transparent;
+    animation: spin 0.9s linear infinite;
+    box-shadow: 0 0 8px #d6577faa;
+}
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+/* Hide spinner when [hidden] */
+.spinner[hidden] {
+    display: none !important;
+}
+
+/* Pre styles for status/output */
+pre {
+    background: #252a36;
+    color: #e8e8e8;
+    border-radius: 4px;
+    border: 1px solid #373d4e;
+    padding: 1em;
+    font-size: 1.05em;
+    overflow: auto;
+    box-shadow: 0 2px 8px #12161a99;
+}
+
+/* Scrollbar (Webkit) */
+::-webkit-scrollbar {
+    width: 8px;
+    background: #232731;
+}
+::-webkit-scrollbar-thumb {
+    background: #32405c;
+    border-radius: 4px;
+}
+
+/* Toast notification styles and animation */
+.toast {
+    position: fixed;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%) translateY(-144%); /* Start further above for 20% longer drop */
+    min-width: 240px;
+    max-width: 60vw;
+    padding: 0.825em 1.65em;
+    border-radius: 1.125em;
+    font-size: 0.885em;
+    font-weight: bold;
+    text-align: center;
+    z-index: 2000;
+    opacity: 0;
+    pointer-events: none;
+    box-shadow: 0 3px 27px #070e2166, 0 0 0 1.5px #222b38aa;
+    letter-spacing: 0.01em;
+    /* No base animation, animated via .show-in or .show-out */
+}
+.toast.show-in {
+    animation: toast-drop-in 1.3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    opacity: 1;
+    pointer-events: auto;
+}
+.toast.show-out {
+    animation: toast-drop-out 1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+@keyframes toast-drop-in {
+    from {
+        transform: translateX(-50%) translateY(-144%);
+        opacity: 0;
+    }
+    80% {
+        transform: translateX(-50%) translateY(calc(2vh + 1.17em));
+        opacity: 1;
+    }
+    to {
+        transform: translateX(-50%) translateY(2vh);
+        opacity: 1;
+    }
+}
+@keyframes toast-drop-out {
+    from {
+        transform: translateX(-50%) translateY(2vh);
+        opacity: 1;
+    }
+    30% {
+        opacity: 1;
+    }
+    to {
+        transform: translateX(-50%) translateY(-144%);
+        opacity: 0;
+    }
+}
+/* Success (green) and error (red) colors for toast */
+.toast.success {
+    background: #234c2a;
+    color: #b7f7b2;
+    border: 1.5px solid #51e16c;
+    box-shadow: 0 4.5px 24px #6dfa6440;
+}
+.toast.error {
+    background: #4a1d2c;
+    color: #ffd0e0;
+    border: 1.5px solid #ff4273;
+    box-shadow: 0 4.5px 24px #ffbadc44;
+}

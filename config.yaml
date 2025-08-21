@@ -1,0 +1,7 @@
+scheduler:
+  ip: "10.9.0.69"
+  command: "python3 scheduler_script.py"
+
+sdvn:
+  ip: "10.9.0.69"
+  command: "python3 sdvn_script.py"
