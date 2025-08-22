@@ -18,11 +18,22 @@ nav {
     padding: 1.5em 2em 1em 2em;
     box-shadow: 0 4px 20px #181b2233;
     z-index: 1000;
+    transition: background 0.32s cubic-bezier(0.71, 0, 0.37, 1),
+        box-shadow 0.32s;
 }
 nav.navbar {
     display: flex;
     justify-content: space-between;
     align-items: center;
+}
+nav.nav-transparent {
+    background: rgba(
+        31,
+        35,
+        50,
+        0.82
+    ); /* ~82% opaque, matches theme, allows see-through */
+    box-shadow: 0 8px 30px 0 #222c3e66;
 }
 /* for .app-version if using the class above */
 .app-version {
@@ -39,6 +50,13 @@ nav h1 {
     font-size: 2em;
 }
 
+.action-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2em;
+}
+
 /* Run button styles */
 button {
     background: #213b53;
@@ -49,7 +67,6 @@ button {
     font-size: 1em;
     font-weight: 600;
     cursor: pointer;
-    margin-bottom: 1em;
     transition: background 0.15s, border 0.15s, box-shadow 0.1s;
     box-shadow: 0 2px 6px 0 #0e101580;
 }
@@ -102,6 +119,32 @@ button:disabled {
 /* Hide spinner when [hidden] */
 .spinner[hidden] {
     display: none !important;
+}
+
+#fetchResultBtn {
+    background: #252a36;
+    color: #79efb6; /* Or your accent color for a greenish down arrow on dark */
+    border: 1px solid #373d4e;
+    border-radius: 6px;
+    padding: 0.36em 0.7em 0.36em 0.7em;
+    margin-left: 1em;
+    font-size: 0.97em;
+    cursor: pointer;
+    box-shadow: 0 1px 6px #21224440;
+    transition: background 0.16s, border 0.16s, color 0.16s;
+    outline: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+#fetchResultBtn:hover,
+#fetchResultBtn:focus {
+    background: #325c6e;
+    color: #81aaff;
+    border-color: #81aaff;
+}
+#fetchResultBtn:active svg {
+    color: #d6577f;
 }
 
 /* Pre styles for status/output */
@@ -193,4 +236,70 @@ pre {
     color: #ffd0e0;
     border: 1.5px solid #ff4273;
     box-shadow: 0 4.5px 24px #ffbadc44;
+}
+
+.output-container {
+    position: relative;
+    margin-top: 2em;
+    /* Adjust as needed for space above/below the output panel */
+    width: 100%;
+    max-width: 100%;
+}
+
+#copyBtn {
+    background: #252a36;
+    color: #81aaff;
+    border: 1.5px solid #373d4e;
+    border-radius: 6px;
+    padding: 0.37em 1.3em 0.37em 1.8em;
+    font-size: 0.97em;
+    font-weight: 600;
+    cursor: pointer;
+    position: relative;
+    top: 0.6em;
+    right: 0.5em;
+    box-shadow: 0 1px 6px #21224440;
+    transition: background 0.16s, border 0.16s, color 0.16s;
+    outline: none;
+}
+#copyBtn[hidden] {
+    display: none !important;
+}
+
+/* Overlay button: absolutely positioned in pre's top-right corner */
+.output-container #copyBtn {
+    position: absolute;
+    top: 0.6em; /* space from top border of pre */
+    right: 1.2em; /* space from right border of pre */
+    background: #252a36;
+    color: #81aaff;
+    border: 1.5px solid #373d4e;
+    border-radius: 6px;
+    padding: 0.37em 1.3em 0.37em 1.8em;
+    font-size: 0.97em;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 1px 6px #21224440;
+    transition: background 0.16s, border 0.16s, color 0.16s;
+    outline: none;
+    z-index: 2;
+}
+/* SVG-specific: slightly larger on hover/focus for feedback */
+.output-container #copyBtn svg {
+    display: block;
+    transition: transform 0.18s, color 0.15s;
+}
+.output-container #copyBtn:hover svg,
+.output-container #copyBtn:focus svg {
+    color: #c0daff; /* lighter on hover */
+    transform: scale(1.12) rotate(-3deg);
+}
+
+/* Optional: tighter for very long outputs */
+@media (max-width: 600px) {
+    #copyBtn {
+        font-size: 0.85em;
+        padding: 0.32em 0.7em 0.32em 1.3em;
+        right: 0.2em;
+    }
 }

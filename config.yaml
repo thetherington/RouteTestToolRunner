@@ -1,7 +1,11 @@
 scheduler:
   ip: "10.9.0.69"
-  command: "python3 scheduler_script.py"
+  commands: 
+    - "python3 scheduler_script.py"
+    - "echo Done with scheduler"
 
 sdvn:
   ip: "10.9.0.69"
-  command: "python3 sdvn_script.py"
+  commands: 
+    - "python3 sdvn_script.py"
+    - "echo Done with sdvn"

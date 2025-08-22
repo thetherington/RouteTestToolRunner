@@ -1,20 +1,82 @@
 // Flag to prevent duplicate polling requests
 let polling = false;
 
+window.addEventListener("scroll", function () {
+    const nav = document.querySelector("nav");
+    if (window.scrollY > 4) {
+        // Set to "4" or "1" pixel so it triggers as soon as anything scrolls under
+        nav.classList.add("nav-transparent");
+    } else {
+        nav.classList.remove("nav-transparent");
+    }
+});
+
+document.getElementById("fetchResultBtn").onclick = function () {
+    // Optionally show a loading message/toast
+    const output = document.getElementById("output");
+    output.textContent = "Fetching last result...";
+    fetch("/api/jobresult")
+        .then((resp) => resp.json())
+        .then((data) => {
+            // Compose output just like the main poll logic
+            setOutputResult(
+                `Scheduler:\n${data.SchedulerOutput}\n\nSDVN:\n${
+                    data.SDVNOutput
+                }\n${data.Error ? "\nError: " + data.Error : ""}`
+            );
+
+            showToast("Fetched Previous Results!", "success");
+        })
+        .catch((err) => {
+            showToast("Failed to Fetch Previous Results", "error");
+        });
+};
+
+// Copy-to-clipboard functionality for output panel
+document.getElementById("copyBtn").onclick = function () {
+    const output = document.getElementById("output");
+    const text = output.textContent || output.innerText;
+    // Use native Clipboard API if available (most browsers)
+    if (navigator.clipboard) {
+        navigator.clipboard
+            .writeText(text)
+            .then(() => showToast("Copied output to clipboard!", "success"))
+            .catch(() => showToast("Failed to copy output.", "error"));
+    } else {
+        // Fallback for older browsers
+        try {
+            const textarea = document.createElement("textarea");
+            textarea.value = text;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand("copy");
+            document.body.removeChild(textarea);
+            showToast("Copied output to clipboard!", "success");
+        } catch (e) {
+            showToast("Failed to copy output.", "error");
+        }
+    }
+};
+
 /**
  * Enable or disable the Run button and show/hide the spinner
  * according to whether a job is running.
  */
 function setButtonState(isRunning) {
-    const btn = document.getElementById("runBtn");
+    const runBtn = document.getElementById("runBtn");
+    const fetchBtn = document.getElementById("fetchResultBtn");
     const spinner = document.getElementById("spinner");
     if (isRunning) {
-        btn.disabled = true;
-        btn.classList.add("disabled-running");
+        runBtn.disabled = true;
+        runBtn.classList.add("disabled-running");
+        fetchBtn.disabled = true;
+        fetchBtn.classList.add("disabled-running");
         spinner.hidden = false;
     } else {
-        btn.disabled = false;
-        btn.classList.remove("disabled-running");
+        runBtn.disabled = false;
+        runBtn.classList.remove("disabled-running");
+        fetchBtn.disabled = false;
+        fetchBtn.classList.remove("disabled-running");
         spinner.hidden = true;
     }
 }
@@ -67,7 +129,7 @@ function startJob() {
                 return;
             }
             statusPre.textContent = "Status: Starting job...";
-            document.getElementById("output").textContent = "";
+            setOutputResult("");
             setButtonState(true);
             fetch("/api/runjob", { method: "POST" }).then(() => {
                 polling = true;
@@ -85,15 +147,17 @@ function pollResult() {
         .then((resp) => resp.json())
         .then((data) => {
             if (data.Running) {
-                setTimeout(pollResult, 1000);
+                setTimeout(pollResult, 500);
             } else {
                 document.getElementById("status").textContent =
                     "Status: Job finished.";
-                document.getElementById("output").textContent = `Scheduler:\n${
-                    data.SchedulerOutput
-                }\n\nSDVN:\n${data.SDVNOutput}\n${
-                    data.Error ? "\nError: " + data.Error : ""
-                }`;
+
+                setOutputResult(
+                    `Scheduler:\n${data.SchedulerOutput}\n\n` +
+                        `SDVN:\n${data.SDVNOutput}\n` +
+                        `${data.Error ? "\nError: " + data.Error : ""}`
+                );
+
                 setButtonState(false);
                 polling = false;
 
@@ -142,6 +206,19 @@ function updateAppVersion() {
             document.getElementById("version").textContent =
                 "v" + (data.version || "?");
         });
+}
+
+function setOutputResult(result) {
+    const output = document.getElementById("output");
+    const copyBtn = document.getElementById("copyBtn");
+    output.textContent = result;
+
+    // Show button only if output is non-empty (excluding whitespace)
+    if (result && result.trim().length > 0) {
+        copyBtn.hidden = false;
+    } else {
+        copyBtn.hidden = true;
+    }
 }
 
 // Periodically refresh job status and activity in the UI (every 1.5s)

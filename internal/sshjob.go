@@ -10,11 +10,11 @@ import (
 )
 
 type SSHJobTarget struct {
-	Label   string // e.g. "scheduler" or "sdvn"
-	IP      string
-	User    string
-	Pass    string
-	Command string
+	Label    string // e.g. "scheduler" or "sdvn"
+	IP       string
+	User     string
+	Pass     string
+	Commands []string
 }
 
 func sshRunCmd(ctx context.Context, app *App, target SSHJobTarget) (string, error) {
@@ -34,25 +34,39 @@ func sshRunCmd(ctx context.Context, app *App, target SSHJobTarget) (string, erro
 	}
 	defer conn.Close()
 
-	app.setJobActivity(fmt.Sprintf("Running command on %s (%s):\n%s", target.Label, target.IP, target.Command))
-	session, err := conn.NewSession()
-	if err != nil {
-		return "", err
+	var combinedOutput string
+
+	for i, cmd := range target.Commands {
+		app.setJobActivity(fmt.Sprintf(
+			"Running command %d/%d on %s (%s):\n%s",
+			i+1, len(target.Commands), target.Label, target.IP, cmd,
+		))
+
+		session, err := conn.NewSession()
+		if err != nil {
+			combinedOutput += fmt.Sprintf("Failed to create session for command %d: %v\n", i+1, err)
+			continue
+		}
+
+		var outBuf, errBuf bytes.Buffer
+
+		session.Stdout = &outBuf
+		session.Stderr = &errBuf
+
+		runErr := session.Run(cmd)
+
+		// Always aggregate output up to and including the error
+		combinedOutput += fmt.Sprintf("Command: %s\nOutput:\n%s%s\n", cmd, outBuf.String(), errBuf.String())
+		session.Close()
+
+		if runErr != nil {
+			// Stop execution on first failure, return early
+			combinedOutput += fmt.Sprintf("[ERROR] Command failed: %v\n", runErr)
+			return combinedOutput, runErr
+		}
 	}
-	defer session.Close()
 
-	var outBuf, errBuf bytes.Buffer
-	session.Stdout = &outBuf
-	session.Stderr = &errBuf
-
-	if err := session.Start(target.Command); err != nil {
-		return "", err
-	}
-	app.setJobActivity(fmt.Sprintf("Receiving output from %s (%s) for command:\n%s", target.Label, target.IP, target.Command))
-	err = session.Wait()
-	output := outBuf.String() + errBuf.String()
-
-	return output, err
+	return combinedOutput, nil
 }
 
 // Ensure only one SSH job at a time
@@ -80,11 +94,11 @@ func (app *App) RunJob(ctx context.Context) JobResult {
 	// ------- Step 1: Connecting to scheduler
 	app.setJobActivity("Preparing to connect to scheduler")
 	schedTarget := SSHJobTarget{
-		Label:   "scheduler",
-		IP:      app.Config.File.Scheduler.IP,
-		User:    app.Config.SchedulerSSH.User,
-		Pass:    app.Config.SchedulerSSH.Pass,
-		Command: app.Config.File.Scheduler.Command,
+		Label:    "scheduler",
+		IP:       app.Config.File.Scheduler.IP,
+		User:     app.Config.SchedulerSSH.User,
+		Pass:     app.Config.SchedulerSSH.Pass,
+		Commands: app.Config.File.Scheduler.Commands,
 	}
 	schedOut, err := sshRunCmd(ctx, app, schedTarget)
 	result.SchedulerOutput = schedOut
@@ -97,11 +111,11 @@ func (app *App) RunJob(ctx context.Context) JobResult {
 	// ------- Step 2: Connecting to sdvn
 	app.setJobActivity("Preparing to connect to sdvn")
 	sdvnTarget := SSHJobTarget{
-		Label:   "sdvn",
-		IP:      app.Config.File.Sdvn.IP,
-		User:    app.Config.SdvnSSH.User,
-		Pass:    app.Config.SdvnSSH.Pass,
-		Command: app.Config.File.Sdvn.Command,
+		Label:    "sdvn",
+		IP:       app.Config.File.Sdvn.IP,
+		User:     app.Config.SdvnSSH.User,
+		Pass:     app.Config.SdvnSSH.Pass,
+		Commands: app.Config.File.Sdvn.Commands,
 	}
 	sdvnOut, err := sshRunCmd(ctx, app, sdvnTarget)
 	result.SDVNOutput = sdvnOut

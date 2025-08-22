@@ -14,8 +14,8 @@ type HostSSHConfig struct {
 }
 
 type HostConfig struct {
-	IP      string `mapstructure:"ip"`
-	Command string `mapstructure:"command"`
+	IP       string   `mapstructure:"ip"`
+	Commands []string `mapstructure:"commands"`
 }
 
 type FileConfig struct {
