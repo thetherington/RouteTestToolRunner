@@ -66,18 +66,21 @@ function setButtonState(isRunning) {
     const runBtn = document.getElementById("runBtn");
     const fetchBtn = document.getElementById("fetchResultBtn");
     const spinner = document.getElementById("spinner");
+    const beam = document.getElementById("nav-loading-beam");
     if (isRunning) {
         runBtn.disabled = true;
         runBtn.classList.add("disabled-running");
         fetchBtn.disabled = true;
         fetchBtn.classList.add("disabled-running");
         spinner.hidden = false;
+        if (beam) beam.hidden = false;
     } else {
         runBtn.disabled = false;
         runBtn.classList.remove("disabled-running");
         fetchBtn.disabled = false;
         fetchBtn.classList.remove("disabled-running");
         spinner.hidden = true;
+        if (beam) beam.hidden = true;
     }
 }
 

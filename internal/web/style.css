@@ -35,6 +35,70 @@ nav.nav-transparent {
     ); /* ~82% opaque, matches theme, allows see-through */
     box-shadow: 0 8px 30px 0 #222c3e66;
 }
+nav h1 {
+    margin: 0;
+    color: #81aaff;
+    letter-spacing: 0.04em;
+    font-size: 2em;
+}
+.nav-loading-beam {
+    position: fixed;
+    left: 0;
+    right: 0;
+    /* Start just at the bottom of the navbar (assuming padding-top: 5em on body) */
+    top: 4.8em;
+    height: 4px;
+    z-index: 1200;
+    pointer-events: none;
+    background: none;
+    /* No visible background—animation handled by ::before */
+}
+
+.nav-loading-beam::before {
+    content: "";
+    display: block;
+    position: absolute;
+    left: -15vw;
+    width: 30vw;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        rgba(129, 170, 255, 0.06) 0%,
+        #81aaff 15%,
+        #d6577f 33%,
+        #81aaff 62%,
+        rgba(129, 170, 255, 0.06) 100%
+    );
+    opacity: 0.58;
+    border-radius: 3px;
+    filter: blur(0.5px);
+    animation: navbeam-move 1.5s linear infinite,
+        navbeam-pulse 1.3s ease-in-out infinite alternate;
+}
+/* Horizontal movement left to right */
+@keyframes navbeam-move {
+    from {
+        left: -15vw;
+    }
+    to {
+        left: 85vw;
+    }
+}
+/* Pulsing intensity + slight blur */
+@keyframes navbeam-pulse {
+    from {
+        opacity: 0.35;
+        filter: blur(1.1px);
+    }
+    60% {
+        opacity: 0.74;
+        filter: blur(0.35px);
+    }
+    to {
+        opacity: 0.5;
+        filter: blur(0.7px);
+    }
+}
 /* for .app-version if using the class above */
 .app-version {
     font-size: 1em;
@@ -42,12 +106,6 @@ nav.nav-transparent {
     opacity: 0.77;
     margin-left: 2em;
     margin-right: 5rem;
-}
-nav h1 {
-    margin: 0;
-    color: #81aaff;
-    letter-spacing: 0.04em;
-    font-size: 2em;
 }
 
 .action-row {
