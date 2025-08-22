@@ -73,14 +73,14 @@ function setButtonState(isRunning) {
         fetchBtn.disabled = true;
         fetchBtn.classList.add("disabled-running");
         spinner.hidden = false;
-        if (beam) beam.hidden = false;
+        beam.hidden = false;
     } else {
         runBtn.disabled = false;
         runBtn.classList.remove("disabled-running");
         fetchBtn.disabled = false;
         fetchBtn.classList.remove("disabled-running");
         spinner.hidden = true;
-        if (beam) beam.hidden = true;
+        beam.hidden = true;
     }
 }
 

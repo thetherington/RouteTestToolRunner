@@ -305,6 +305,9 @@ pre {
 }
 
 #copyBtn {
+    display: flex;
+    align-items: center;
+    gap: 3px;
     background: #252a36;
     color: #81aaff;
     border: 1.5px solid #373d4e;
@@ -347,6 +350,11 @@ pre {
     display: block;
     transition: transform 0.18s, color 0.15s;
 }
+
+.output-container #copyBtn:hover {
+    border-color: #c0daff4d;
+}
+
 .output-container #copyBtn:hover svg,
 .output-container #copyBtn:focus svg {
     color: #c0daff; /* lighter on hover */
