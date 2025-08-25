@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"log/slog"
+	"strings"
 	"time"
 
 	"golang.org/x/crypto/ssh"
@@ -104,6 +106,7 @@ func (app *App) RunJob(ctx context.Context) JobResult {
 	result.SchedulerOutput = schedOut
 	if err != nil {
 		result.Error = "Scheduler script error: " + err.Error()
+		slog.Error("Scheduler script", "error", err, "output", schedOut)
 		app.setLastResult(result)
 		return result
 	}
@@ -121,6 +124,7 @@ func (app *App) RunJob(ctx context.Context) JobResult {
 	result.SDVNOutput = sdvnOut
 	if err != nil {
 		result.Error = "SDVN script error: " + err.Error()
+		slog.Error("SDVN script", "error", err, "output", sdvnOut)
 	}
 
 	app.setLastResult(result)
@@ -148,6 +152,9 @@ func (app *App) GetLastResult() JobResult {
 // Helper for safe activity update
 func (app *App) setJobActivity(desc string) {
 	app.mutex.Lock()
+
+	slog.Info(strings.ReplaceAll(desc, "\n", ""))
 	app.jobActivity = desc
+
 	app.mutex.Unlock()
 }

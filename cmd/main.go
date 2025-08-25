@@ -4,15 +4,39 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"log/slog"
 	"net/http"
+	"os"
+	"time"
 
+	"github.com/lmittmann/tint"
 	"github.com/thetherington/RouteTestTool/internal"
 )
 
 // Version will be set at build time via -ldflags "-X main.Version=..."
 var Version = "dev"
 
+// --- ASCII Banner ---
+var banner = `
+  ____             _         _____        _     _____           _ 
+ |  _ \ ___  _   _| |_ ___  |_   _|__ ___| |_  |_   _|__   ___ | |
+ | |_) / _ \| | | | __/ _ \   | |/ _ Y __| __|   | |/ _ \ / _ \| |
+ |  _ < (_) | |_| | ||  __/   | |  __|__ \ |_    | | (_) | (_) | |
+ |_| \_\___/ \__,_|\__\___|   |_|\___|___/\__|   |_|\___/ \___/|_|
+                                                                  
+`
+
 func main() {
+	fmt.Print(banner)
+
+	// use the tint library to set the logging output
+	slog.SetDefault(slog.New(
+		tint.NewHandler(os.Stderr, &tint.Options{
+			Level:      slog.LevelDebug,
+			TimeFormat: time.Kitchen,
+		}),
+	))
+
 	// Command-line flags
 	var configPath string
 	var port int
@@ -41,7 +65,7 @@ func main() {
 	}
 
 	// Print application version to console
-	fmt.Printf("Application Version: %s\n", Version)
+	fmt.Printf("\nApplication Version: %s\n", Version)
 
 	// Pass version to App/handlers via package var (needed for /api/version endpoint)
 	internal.AppVersion = Version

@@ -40,7 +40,7 @@ func NewApp(config *AppConfig) (*App, error) {
 
 	r := chi.NewRouter()
 
-	r.Use(middleware.Logger)
+	// r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   []string{"*"},

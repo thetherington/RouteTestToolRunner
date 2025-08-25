@@ -32,6 +32,37 @@ document.getElementById("fetchResultBtn").onclick = function () {
         });
 };
 
+document.getElementById("saveBtn").onclick = function () {
+    const output = document.getElementById("output");
+    const text = output.textContent || output.innerText;
+    // Format today's date as YYYY-MM-DD for the filename
+    const today = new Date();
+    const pad = (n) => (n < 10 ? "0" + n : "" + n);
+    const dateStr =
+        today.getFullYear() +
+        "-" +
+        pad(today.getMonth() + 1) +
+        "-" +
+        pad(today.getDate());
+    const filename = `RouteTestResult_${dateStr}.txt`;
+
+    // Create a Blob and download link
+    const blob = new Blob([text], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+
+    // Create a temporary link and click it
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }, 150);
+    showToast("Saved output to file!", "success");
+};
+
 // Copy-to-clipboard functionality for output panel
 document.getElementById("copyBtn").onclick = function () {
     const output = document.getElementById("output");
@@ -214,13 +245,16 @@ function updateAppVersion() {
 function setOutputResult(result) {
     const output = document.getElementById("output");
     const copyBtn = document.getElementById("copyBtn");
+    const saveBtn = document.getElementById("saveBtn");
     output.textContent = result;
 
     // Show button only if output is non-empty (excluding whitespace)
     if (result && result.trim().length > 0) {
         copyBtn.hidden = false;
+        saveBtn.hidden = false;
     } else {
         copyBtn.hidden = true;
+        saveBtn.hidden = true;
     }
 }
 

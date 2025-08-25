@@ -331,12 +331,12 @@ pre {
 .output-container #copyBtn {
     position: absolute;
     top: 0.6em; /* space from top border of pre */
-    right: 1.2em; /* space from right border of pre */
+    right: 8em; /* space left of saveBtn */
     background: #252a36;
     color: #81aaff;
     border: 1.5px solid #373d4e;
     border-radius: 6px;
-    padding: 0.37em 1.3em 0.37em 1.8em;
+    padding: 0.37em 1.1em 0.37em 1.1em;
     font-size: 0.97em;
     font-weight: 600;
     cursor: pointer;
@@ -367,5 +367,50 @@ pre {
         font-size: 0.85em;
         padding: 0.32em 0.7em 0.32em 1.3em;
         right: 0.2em;
+    }
+}
+#saveBtn {
+    display: flex;
+    align-items: center;
+    background: #252a36;
+    color: #79efb6;
+    border: 1.5px solid #373d4e;
+    border-radius: 6px;
+    padding: 0.37em 1.1em 0.37em 1.1em;
+    font-size: 0.97em;
+    font-weight: 600;
+    cursor: pointer;
+    position: absolute;
+    top: 0.6em;
+    right: 1.2em; /* space from right border of pre */
+    box-shadow: 0 1px 6px #21224440;
+    transition: background 0.16s, border 0.16s, color 0.16s;
+    outline: none;
+    z-index: 2;
+}
+#saveBtn[hidden] {
+    display: none !important;
+}
+.output-container #saveBtn svg {
+    display: block;
+    transition: transform 0.18s, color 0.15s;
+}
+.output-container #saveBtn:hover,
+.output-container #saveBtn:focus {
+    background: #214c33;
+    color: #adf1c1;
+    border-color: #79efb6;
+}
+.output-container #saveBtn:hover svg,
+.output-container #saveBtn:focus svg {
+    color: #adf1c1;
+    transform: scale(1.11) rotate(2deg);
+}
+@media (max-width: 600px) {
+    #saveBtn {
+        font-size: 0.85em;
+        padding: 0.3em 0.6em 0.3em 0.6em;
+        right: 2.2em;
+        top: 0.2em;
     }
 }
