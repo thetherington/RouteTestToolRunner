@@ -1,2 +1,4 @@
 .env
-RouteTestTool
+RouteTestToolRunner
+# Added by goreleaser init:
+dist/

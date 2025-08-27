@@ -1,5 +1,5 @@
 scheduler:
-  ip: "10.9.0.69"
+  ip: "10.9.1.69"
   commands: 
     - "python3 scheduler_script.py"
     - "echo Done with scheduler"

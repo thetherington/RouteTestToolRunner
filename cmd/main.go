@@ -14,7 +14,12 @@ import (
 )
 
 // Version will be set at build time via -ldflags "-X main.Version=..."
-var Version = "dev"
+var (
+	Version string = "Dev"
+	Commit  string
+	Date    string
+	BuiltBy string
+)
 
 // --- ASCII Banner ---
 var banner = `
@@ -66,6 +71,7 @@ func main() {
 
 	// Print application version to console
 	fmt.Printf("\nApplication Version: %s\n", Version)
+	fmt.Printf("Build Date: %s (Commit: %s) By: %s\n\n", Date, Commit, BuiltBy)
 
 	// Pass version to App/handlers via package var (needed for /api/version endpoint)
 	internal.AppVersion = Version

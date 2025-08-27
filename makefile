@@ -1,22 +1,31 @@
 # Makefile for SSH Web Job Runner
-BINARY=RouteTestTool
+BINARY=RouteTestToolRunner
 MAIN=cmd/main.go
 
 VERSION ?= dev
-CONFIG ?= config.yaml
-PORT ?= 8080
+TODAY_DATE := $(shell date +%Y-%m-%d)
+CONFIG ?=
+PORT ?=
+ARGS ?=
 
-.PHONY: all build run clean
+.PHONY: all build run release clean
 
 all: build
 
 build:
-	go build -ldflags "-X 'main.Version=$(VERSION)'" -o $(BINARY) $(MAIN)
+	go build -ldflags "-X 'main.Version=$(VERSION)' -X 'main.Date=$(TODAY_DATE)' -X 'main.BuiltBy=makefile'" -o $(BINARY) $(MAIN)
 
 run: build
-	@CONFIG_OPT="-config=$(CONFIG)"; \
-	PORT_OPT="-port=$(PORT)"; \
-	./$(BINARY) [CONFIG_OPT] PORT_OPT
+	@CMD="./$(BINARY)"; \
+	if [ -n "$(CONFIG)" ]; then CMD="$$CMD -config=$(CONFIG)"; fi; \
+	if [ -n "$(PORT)" ]; then CMD="$$CMD -port=$(PORT)"; fi; \
+	if [ -n "$(ARGS)" ]; then CMD="$$CMD $(ARGS)"; fi; \
+	echo "Running: $$CMD"; \
+	$$CMD
+
+release:
+	goreleaser release --snapshot
 
 clean:
-	rm -rf BINARY
+	rm -rf ${BINARY}
+	rm -rf dist

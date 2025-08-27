@@ -80,56 +80,59 @@ func (app *App) RunJob(ctx context.Context) JobResult {
 		return JobResult{Running: true, Error: "job already running"}
 	}
 
-	app.running = true
-	app.jobActivity = "Starting job"
-	app.mutex.Unlock()
-
-	defer func() {
-		app.mutex.Lock()
-		app.running = false
-		app.jobActivity = "Idle"
+	// background job
+	go func() {
+		app.running = true
+		app.jobActivity = "Starting job"
 		app.mutex.Unlock()
+
+		defer func() {
+			app.mutex.Lock()
+			app.running = false
+			app.jobActivity = "Idle"
+			app.mutex.Unlock()
+		}()
+
+		result := JobResult{Running: false}
+
+		// ------- Step 1: Connecting to scheduler
+		app.setJobActivity("Preparing to connect to scheduler")
+		schedTarget := SSHJobTarget{
+			Label:    "scheduler",
+			IP:       app.Config.File.Scheduler.IP,
+			User:     app.Config.SchedulerSSH.User,
+			Pass:     app.Config.SchedulerSSH.Pass,
+			Commands: app.Config.File.Scheduler.Commands,
+		}
+		schedOut, err := sshRunCmd(ctx, app, schedTarget)
+		result.SchedulerOutput = schedOut
+		if err != nil {
+			result.Error = "Scheduler script error: " + err.Error()
+			slog.Error("Scheduler script", "error", err, "output", schedOut)
+			app.setLastResult(result)
+			return
+		}
+
+		// ------- Step 2: Connecting to sdvn
+		app.setJobActivity("Preparing to connect to sdvn")
+		sdvnTarget := SSHJobTarget{
+			Label:    "sdvn",
+			IP:       app.Config.File.Sdvn.IP,
+			User:     app.Config.SdvnSSH.User,
+			Pass:     app.Config.SdvnSSH.Pass,
+			Commands: app.Config.File.Sdvn.Commands,
+		}
+		sdvnOut, err := sshRunCmd(ctx, app, sdvnTarget)
+		result.SDVNOutput = sdvnOut
+		if err != nil {
+			result.Error = "SDVN script error: " + err.Error()
+			slog.Error("SDVN script", "error", err, "output", sdvnOut)
+		}
+
+		app.setLastResult(result)
 	}()
 
-	result := JobResult{Running: false}
-
-	// ------- Step 1: Connecting to scheduler
-	app.setJobActivity("Preparing to connect to scheduler")
-	schedTarget := SSHJobTarget{
-		Label:    "scheduler",
-		IP:       app.Config.File.Scheduler.IP,
-		User:     app.Config.SchedulerSSH.User,
-		Pass:     app.Config.SchedulerSSH.Pass,
-		Commands: app.Config.File.Scheduler.Commands,
-	}
-	schedOut, err := sshRunCmd(ctx, app, schedTarget)
-	result.SchedulerOutput = schedOut
-	if err != nil {
-		result.Error = "Scheduler script error: " + err.Error()
-		slog.Error("Scheduler script", "error", err, "output", schedOut)
-		app.setLastResult(result)
-		return result
-	}
-
-	// ------- Step 2: Connecting to sdvn
-	app.setJobActivity("Preparing to connect to sdvn")
-	sdvnTarget := SSHJobTarget{
-		Label:    "sdvn",
-		IP:       app.Config.File.Sdvn.IP,
-		User:     app.Config.SdvnSSH.User,
-		Pass:     app.Config.SdvnSSH.Pass,
-		Commands: app.Config.File.Sdvn.Commands,
-	}
-	sdvnOut, err := sshRunCmd(ctx, app, sdvnTarget)
-	result.SDVNOutput = sdvnOut
-	if err != nil {
-		result.Error = "SDVN script error: " + err.Error()
-		slog.Error("SDVN script", "error", err, "output", sdvnOut)
-	}
-
-	app.setLastResult(result)
-
-	return result
+	return JobResult{Running: true}
 }
 
 func (app *App) setLastResult(res JobResult) {

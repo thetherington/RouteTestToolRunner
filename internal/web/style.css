@@ -331,7 +331,7 @@ pre {
 .output-container #copyBtn {
     position: absolute;
     top: 0.6em; /* space from top border of pre */
-    right: 8em; /* space left of saveBtn */
+    right: 5.5em; /* space left of saveBtn */
     background: #252a36;
     color: #81aaff;
     border: 1.5px solid #373d4e;
