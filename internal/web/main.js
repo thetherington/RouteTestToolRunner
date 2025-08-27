@@ -32,6 +32,23 @@ document.getElementById("fetchResultBtn").onclick = function () {
         });
 };
 
+document.getElementById("stopBtn").onclick = function () {
+    this.disabled = true;
+    showToast("Stopping job...", "error");
+    fetch("/api/stopjob", { method: "POST" })
+        .then((resp) => resp.json())
+        .then((data) => {
+            if (data.stopped) {
+                showToast("Job stopped by user.", "success");
+            } else {
+                showToast(
+                    "Failed to stop job: " + (data.error || "?"),
+                    "error"
+                );
+            }
+        });
+};
+
 document.getElementById("saveBtn").onclick = function () {
     const output = document.getElementById("output");
     const text = output.textContent || output.innerText;
@@ -96,6 +113,7 @@ document.getElementById("copyBtn").onclick = function () {
 function setButtonState(isRunning) {
     const runBtn = document.getElementById("runBtn");
     const fetchBtn = document.getElementById("fetchResultBtn");
+    const stopBtn = document.getElementById("stopBtn");
     const spinner = document.getElementById("spinner");
     const beam = document.getElementById("nav-loading-beam");
     if (isRunning) {
@@ -105,6 +123,8 @@ function setButtonState(isRunning) {
         fetchBtn.classList.add("disabled-running");
         spinner.hidden = false;
         beam.hidden = false;
+        stopBtn.hidden = false;
+        stopBtn.disabled = false;
     } else {
         runBtn.disabled = false;
         runBtn.classList.remove("disabled-running");
@@ -112,6 +132,8 @@ function setButtonState(isRunning) {
         fetchBtn.classList.remove("disabled-running");
         spinner.hidden = true;
         beam.hidden = true;
+        stopBtn.hidden = true;
+        stopBtn.disabled = true;
     }
 }
 

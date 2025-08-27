@@ -16,6 +16,15 @@ func RegisterHandlers(r chi.Router, app *App) {
 		json.NewEncoder(w).Encode(result)
 	})
 
+	r.Post("/api/stopjob", func(w http.ResponseWriter, r *http.Request) {
+		err := app.StopJob()
+		w.Header().Set("Content-Type", "application/json")
+		if err != nil {
+			json.NewEncoder(w).Encode(map[string]interface{}{"stopped": false, "error": err.Error()})
+		} else {
+			json.NewEncoder(w).Encode(map[string]interface{}{"stopped": true})
+		}
+	})
 	r.Get("/api/jobresult", func(w http.ResponseWriter, r *http.Request) {
 		res := app.GetLastResult()
 		w.Header().Set("Content-Type", "application/json")

@@ -115,6 +115,12 @@ nav h1 {
     margin-bottom: 2em;
 }
 
+.run-actions {
+    display: flex;
+    align-items: center;
+    justify-content: start;
+}
+
 /* Run button styles */
 button {
     background: #213b53;
@@ -413,4 +419,33 @@ pre {
         right: 2.2em;
         top: 0.2em;
     }
+}
+#stopBtn {
+    margin-left: 0.7em;
+    background: #331f1f;
+    color: #ff6666;
+    border: 1.5px solid #6f2323;
+    border-radius: 7px;
+    padding: 0.45em 1em 0.45em 1em;
+    font-size: 0.97em;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 1px 6px #3c232280;
+    transition: background 0.18s, border 0.18s, color 0.15s;
+    outline: none;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+}
+#stopBtn[hidden] {
+    display: none !important;
+}
+#stopBtn:hover,
+#stopBtn:focus {
+    background: #602c2c;
+    color: #fff1f5;
+    border-color: #ff4273;
+}
+#stopBtn:active svg {
+    color: #d6577f;
 }
