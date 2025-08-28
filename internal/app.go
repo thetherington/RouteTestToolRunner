@@ -1,14 +1,16 @@
 package internal
 
 import (
+	"context"
 	"sync"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
+	"golang.org/x/crypto/ssh"
 )
 
-var AppVersion = "dev" // Default; will  overwritten by -ldflags at build time
+var AppVersion = "dev" // Default; will be overwritten by -ldflags at build time
 
 type JobResult struct {
 	SchedulerOutput string
@@ -28,6 +30,10 @@ type App struct {
 	running     bool
 	lastResult  JobResult
 	jobActivity string
+
+	// Job-cancellation support:
+	jobCancel     context.CancelFunc
+	activeSession *ssh.Session
 }
 
 // Construction
