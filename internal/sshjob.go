@@ -19,6 +19,17 @@ type SSHJobTarget struct {
 	Commands []string
 }
 
+// sshRunCmd executes one or more shell commands on a remote host via SSH,
+// updating the app's job activity status for each phase. For every command in target.Commands,
+// it opens a new SSH session, updates activity, and runs the command, appending the full output
+// (stdout and stderr) to a combined result string.
+// If any command fails or if the provided context is canceled (such as by a user-initiated stop),
+// execution halts immediately: the current SSH session is closed, partial output is returned,
+// and an error is propagated upstream.
+// This function ensures thread-safe setting and clearing of the app's active session pointer
+// for robust interruption and status UX feedback.
+// Returns the complete aggregated output for all completed commands and an error if the job was stopped
+// or a command failed.
 func sshRunCmd(ctx context.Context, app *App, target SSHJobTarget) (string, error) {
 	app.setJobActivity(fmt.Sprintf("Connecting to %s (%s) via SSH...", target.Label, target.IP))
 	config := &ssh.ClientConfig{
@@ -93,7 +104,15 @@ func sshRunCmd(ctx context.Context, app *App, target SSHJobTarget) (string, erro
 	return combinedOutput, nil
 }
 
-// Ensure only one SSH job at a time
+// RunJob is the primary job orchestration method, launched by the REST API to execute a full job.
+// It ensures job serialization with a mutex, then starts a cancelable context for use by SSH execution
+// (allowing for safe interruption/stopping).
+// This function runs all scheduler host commands in order (via sshRunCmd); if and only if they all succeed,
+// it then runs all sdvn commands.
+// At every important step it updates the job's activity/status string for real-time user feedback.
+// If the job is canceled (via StopJob), or a command fails, execution stops immediately, cleanup is performed,
+// and an appropriate error and all partial output are returned and surfaced to the frontend.
+// Always resets internal cancel func, clears the session pointer, and updates activity and state on completion or stop.
 func (app *App) RunJob(ctx context.Context) JobResult {
 	app.mutex.Lock()
 
@@ -138,7 +157,7 @@ func (app *App) RunJob(ctx context.Context) JobResult {
 		if err != nil {
 			if ctx.Err() == context.Canceled {
 				result.Error = err.Error()
-				slog.Warn(err.Error())
+				slog.Warn(result.Error)
 			} else {
 				result.Error = "Scheduler script error: " + err.Error()
 				slog.Error("Scheduler script", "error", err, "output", schedOut)
@@ -162,7 +181,7 @@ func (app *App) RunJob(ctx context.Context) JobResult {
 		if err != nil {
 			if ctx.Err() == context.Canceled {
 				result.Error = err.Error()
-				slog.Warn(err.Error())
+				slog.Warn(result.Error)
 			} else {
 				result.Error = "SDVN script error: " + err.Error()
 				slog.Error("SDVN script", "error", err, "output", sdvnOut)
@@ -175,6 +194,11 @@ func (app *App) RunJob(ctx context.Context) JobResult {
 	return JobResult{Running: true}
 }
 
+// StopJob allows a running job to be forcibly stopped, either via API or UI action.
+// It acquires the mutex, sets the cancellation function if present (signaling all context-aware routines to stop),
+// and if an SSH session is currently active, closes the session to immediately interrupt any in-progress remote command.
+// The activity string is updated to reflect user intervention, and all related fields are safely cleaned up when the job exits.
+// Returns an error if no job was running, otherwise nil.
 func (app *App) StopJob() error {
 	app.mutex.Lock()
 	defer app.mutex.Unlock()
@@ -197,13 +221,6 @@ func (app *App) StopJob() error {
 	return nil
 }
 
-func (app *App) setLastResult(res JobResult) {
-	app.mutex.Lock()
-	defer app.mutex.Unlock()
-
-	app.lastResult = res
-}
-
 func (app *App) GetLastResult() JobResult {
 	app.mutex.Lock()
 	defer app.mutex.Unlock()
@@ -214,7 +231,14 @@ func (app *App) GetLastResult() JobResult {
 	return result
 }
 
-// Helper for safe activity update
+// Helper functions for safe activity and app variable update
+func (app *App) setLastResult(res JobResult) {
+	app.mutex.Lock()
+	defer app.mutex.Unlock()
+
+	app.lastResult = res
+}
+
 func (app *App) setJobActivity(desc string) {
 	app.mutex.Lock()
 

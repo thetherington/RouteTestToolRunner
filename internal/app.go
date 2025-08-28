@@ -10,7 +10,7 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-var AppVersion = "dev" // Default; will  overwritten by -ldflags at build time
+var AppVersion = "dev" // Default; will be overwritten by -ldflags at build time
 
 type JobResult struct {
 	SchedulerOutput string
