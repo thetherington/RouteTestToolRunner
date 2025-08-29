@@ -1,0 +1,103 @@
+// Output/Status styling
+pre {
+    background: var(--color-accent-pre-bg);
+    color: var(--color-pre-text);
+    border-radius: 4px;
+    border: 1px solid var(--color-accent-pre-border);
+    padding: 1em;
+    font-size: 1.05em;
+    overflow: auto;
+    box-shadow: 0 2px 8px var(--color-accent-pre-shadow);
+}
+
+// Output panel and overlay buttons
+.output-container {
+    position: relative;
+    margin-top: 2em;
+    width: 100%;
+    max-width: 100%;
+
+    #copyBtn,
+    #saveBtn {
+        display: flex;
+        align-items: center;
+        gap: 3px;
+        background: #252a36;
+        border: 1.5px solid #373d4e;
+        border-radius: 6px;
+        font-size: 0.97em;
+        font-weight: 600;
+        cursor: pointer;
+        position: absolute;
+        top: 0.6em;
+        box-shadow: 0 1px 6px #21224440;
+        transition: background 0.16s, border 0.16s, color 0.16s;
+        outline: none;
+        z-index: 2;
+
+        &[hidden] {
+            display: none !important;
+        }
+
+        svg {
+            display: block;
+            transition: transform 0.18s, color 0.15s;
+        }
+    }
+
+    #copyBtn {
+        color: var(--color-clip-btn-text);
+        padding: 0.37em 1.3em 0.37em 1.8em;
+        right: 5.5em;
+        /* space left of saveBtn */
+
+        &:hover,
+        &:focus {
+            background: var(--color-clip-btn-hover-bg);
+            color: var(--color-clip-btn-hover-text);
+            border-color: var(--color-clip-btn-hover-border);
+        }
+
+        &:hover svg,
+        &:focus svg {
+            color: var(--color-clip-btn-hover-text);
+            transform: scale(1.12) rotate(-3deg);
+        }
+    }
+
+    #saveBtn {
+        color: var(--color-save-btn-text);
+        padding: 0.37em 1.1em 0.37em 1.1em;
+        right: 1.2em;
+        /* space from right border of pre */
+
+        &:hover,
+        &:focus {
+            background: var(--color-save-btn-hover-bg);
+            color: var(--color-save-btn-hover-text);
+            border-color: var(--color-save-btn-hover-border);
+        }
+
+        &:hover svg,
+        &:focus svg {
+            color: var(--color-save-btn-hover-text);
+            transform: scale(1.11) rotate(2deg);
+        }
+    }
+
+    @media (max-width: 600px) {
+        #copyBtn {
+            font-size: 0.85em;
+            padding: 0.32em 0.7em 0.32em 1.3em;
+            right: 0.2em;
+            top: 0.2em;
+        }
+
+        #saveBtn {
+            font-size: 0.85em;
+            padding: 0.30em 0.6em 0.30em 0.6em;
+            right: 2.2em;
+            top: 0.2em;
+        }
+    }
+}

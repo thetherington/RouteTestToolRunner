@@ -1,0 +1,56 @@
+:root {
+    --color-bg: #181b22; // Main background
+    --color-fg: #f1f1f1; // Main text
+    --color-nav: #1f2332;
+    --color-nav-transparent: rgba(31, 35, 50, 0.82);
+    --color-box-shadow: #181b2233;
+    --color-nav-shadow: #222c3e66;
+    --color-title: #81aaff;
+    --color-accent-main: #81aaff;
+    --color-accent-magenta: #d6577f;
+    --color-accent-green: #79efb6;
+    --color-accent-green-light: #adf1c1;
+    --color-accent-green-border: #51e16c;
+    --color-accent-green-dark: #234c2a;
+    --color-accent-beam1: rgba(129, 170, 255, 0.06);
+    --color-accent-beam2: #81aaff;
+    --color-accent-beam3: #d6577f;
+    --color-pre-text: #e8e8e8;
+    --color-accent-pre-bg: #252a36;
+    --color-accent-pre-border: #373d4e;
+    --color-accent-pre-shadow: #12161a99;
+    --color-btn-bg: #213b53;
+    --color-btn-border: #446a9f;
+    --color-btn-hover-bg: #315c8a;
+    --color-btn-hover-text: #81aaff;
+    --color-btn-disabled-bg: #4e4265;
+    --color-btn-disabled-text: #9f8cff;
+    --color-btn-disabled-border: #d6577f;
+    --color-btn-disabled-shadow: #d6577faa;
+    --color-btn-disabled-shadow-2: #181b22cc;
+    --color-clip-btn-bg: #252a36;
+    --color-clip-btn-text: #81aaff;
+    --color-clip-btn-border: #373d4e;
+    --color-clip-btn-hover-bg: #325c6e;
+    --color-clip-btn-hover-text: #c0daff;
+    --color-clip-btn-hover-border: #81aaff;
+    --color-clip-btn-active: #d6577f;
+    --color-save-btn-bg: #252a36;
+    --color-save-btn-text: #79efb6;
+    --color-save-btn-border: #373d4e;
+    --color-save-btn-hover-bg: #214c33;
+    --color-save-btn-hover-text: #adf1c1;
+    --color-save-btn-hover-border: #79efb6;
+    --color-toast-success-bg: #234c2a;
+    --color-toast-success-text: #b7f7b2;
+    --color-toast-success-border: #51e16c;
+    --color-toast-success-shadow: #6dfa6440;
+    --color-toast-error-bg: #4a1d2c;
+    --color-toast-error-text: #ffd0e0;
+    --color-toast-error-border: #ff4273;
+    --color-toast-error-shadow: #ffbadc44;
+    --color-scrollbar: #232731;
+    --color-scrollbar-thumb: #32405c;
+
+    --line: 1px solid var(--color-grey-light-2)
+}
