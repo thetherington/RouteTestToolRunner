@@ -13,5 +13,8 @@ export function getDom() {
         output: document.getElementById("output"),
         copyBtn: document.getElementById("copyBtn"),
         saveBtn: document.getElementById("saveBtn"),
+        menuBtn: document.getElementById("menuBtn"),
+        slidePanel: document.getElementById("slidePanel"),
+        closePanelBtn: document.getElementById("closePanelBtn"),
     };
 }

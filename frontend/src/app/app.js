@@ -286,4 +286,21 @@ export class App {
             this.dom.saveBtn.hidden = true;
         }
     }
+
+    /**
+     * Opens the sidebar slide out menu
+     */
+    openMenu() {
+        this.dom.menuBtn.classList.add("open");
+        this.dom.slidePanel.classList.add("open");
+        this.dom.slidePanel.ariaHidden = "false";
+    }
+    /**
+     * Closes the sidebar slide out menu
+     */
+    closeMenu() {
+        this.dom.slidePanel.classList.remove("open");
+        this.dom.menuBtn.classList.remove("open");
+        this.dom.slidePanel.ariaHidden = "true";
+    }
 }

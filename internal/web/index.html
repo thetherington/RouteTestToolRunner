@@ -5,17 +5,51 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Route Test Tool</title>
-  <script type="module" crossorigin src="/assets/index-BlmTOOZ_.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/index-AlT1fi36.css">
+  <script type="module" crossorigin src="/assets/index-BBqE6vKE.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-Cy4AU_AA.css">
 </head>
 
 <body>
   <nav class="navbar">
-    <h1>Route Test Tool Runner</h1>
+    <div class="run-actions">
+      <button id="menuBtn" class="hamburger" aria-label="Open menu">
+        <!-- Hamburger SVG Icon (three lines, easy to animate) -->
+        <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"
+          focusable="false">
+          <rect class="bar bar1" x="6" y="8" width="16" height="2.2" rx="1"
+            fill="currentColor" />
+          <rect class="bar bar2" x="6" y="13" width="16" height="2.2" rx="1"
+            fill="currentColor" />
+          <rect class="bar bar3" x="6" y="18" width="16" height="2.2" rx="1"
+            fill="currentColor" />
+        </svg>
+      </button>
+      <h1>Route Test Tool Runner</h1>
+    </div>
     <span id="version" class="app-version"></span>
   </nav>
   <div id="nav-loading-beam" class="nav-loading-beam" hidden></div>
   <div id="toast" class="toast" hidden></div>
+
+  <!-- Slide-out Panel (initially hidden/closed) -->
+  <aside id="slidePanel" class="slide-panel" aria-hidden="true">
+    <button id="closePanelBtn" class="panel-close" aria-label="Close panel">
+      <!-- X icon SVG -->
+      <svg width="128" height="128" viewBox="0 0 28 28" aria-hidden="true"
+        focusable="false">
+        <line x1="8" y1="8" x2="20" y2="20" stroke="currentColor"
+          stroke-width="2.4" stroke-linecap="round" />
+        <line x1="20" y1="8" x2="8" y2="20" stroke="currentColor"
+          stroke-width="2.4" stroke-linecap="round" />
+      </svg>
+    </button>
+    <div class="panel-content">
+      <!-- (Future) informational content goes here -->
+      <h2>Panel Title</h2>
+      <p>Information goes here...</p>
+    </div>
+  </aside>
+
   <div class="action-row">
     <div class="run-actions">
       <button id="runBtn">Run Route Test</button>
@@ -46,6 +80,7 @@
       </button>
     </div>
   </div>
+
   <pre id="status">Status: Checking...</pre>
   <div class="output-container">
     <pre id="output">Output will appear here.
