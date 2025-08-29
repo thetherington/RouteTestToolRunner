@@ -1,0 +1,35 @@
+body {
+    font-family: Arial, sans-serif;
+    background: var(--color-bg);
+    color: var(--color-fg);
+    margin: 0;
+    padding: 0 2em;
+    /* Remove top padding; keep side padding */
+    padding-top: 7em;
+    /* Reserve space for fixed nav bar */
+}
+
+// Scrollbar (Webkit)
+::-webkit-scrollbar {
+    width: 8px;
+    background: var(--color-scrollbar);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--color-scrollbar-thumb);
+    border-radius: 4px;
+}
+
+.action-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2em;
+}
+
+.run-actions {
+    display: flex;
+    align-items: center;
+    justify-content: start;
+    gap: 10px;
+}

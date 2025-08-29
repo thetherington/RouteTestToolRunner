@@ -1,0 +1,225 @@
+@use "sass:color";
+
+// ===================
+// Button style variables
+// ===================
+$btn-radius: 6px;
+$btn-shadow: 0 2px 6px 0 #0e101580;
+$btn-padding: 0.42em 1.35em;
+$btn-font-family: Arial, sans-serif;
+$btn-font-weight: 600;
+
+$btn-bg: #213b53;
+$btn-border: #446a9f;
+$btn-fg: #fff;
+$btn-hover-bg: #315c8a;
+$btn-hover-border: #81aaff;
+$btn-primary: #81aaff;
+
+$btn-danger-bg: #4a1d2c;
+$btn-danger-border: #ff4273;
+$btn-danger-fg: #ffd0e0;
+
+$btn-success-bg: #234c2a;
+$btn-success-fg: #b7f7b2;
+$btn-success-border: #1a822d;
+
+$btn-icon-bg: #252a36;
+$btn-icon-border: #373d4e;
+
+$btn-disabled-bg: #4e4265;
+$btn-disabled-fg: #9f8cff;
+$btn-disabled-border: #d6577f;
+
+$btn-copy-hover-bg: #325c6e;
+$btn-copy-hover-fg: #c0daff;
+$btn-copy-hover-border: #81aaff;
+
+$btn-save-bg: #252a36;
+$btn-save-fg: #79efb6;
+$btn-save-hover-bg: #214c33;
+$btn-save-hover-fg: #adf1c1;
+$btn-save-hover-border: #79efb6;
+
+// ===================
+// Base Style
+// ===================
+
+.btn {
+    font-family: $btn-font-family;
+    font-size: 1em;
+    font-weight: $btn-font-weight;
+    border-radius: $btn-radius;
+    border: 1px solid $btn-border;
+    color: $btn-fg;
+    background: $btn-bg;
+    box-shadow: $btn-shadow;
+    padding: $btn-padding;
+    cursor: pointer;
+    outline: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45em;
+    transition: background 0.15s, border 0.15s, color 0.13s;
+
+    &:hover,
+    &:focus {
+        background: $btn-hover-bg;
+        border-color: $btn-hover-border;
+        border-color: var(--color-accent-main);
+    }
+
+    &:disabled,
+    &.is-disabled {
+        background: $btn-disabled-bg !important;
+        color: $btn-disabled-fg !important;
+        border: 2px solid $btn-disabled-border !important;
+        cursor: not-allowed;
+        opacity: 1;
+        box-shadow: 0 0 8px #d6577faa;
+        text-shadow: 0 1px 3px #181b22cc;
+    }
+
+    &[hidden] {
+        display: none !important;
+    }
+}
+
+.btn-sm {
+    @extend .btn;
+
+    padding: 1px !important;
+    width: 2em;
+    height: 2em;
+
+    svg {
+        width: 1.3em !important;
+        height: 1.3em !important;
+    }
+}
+
+// ===================
+// Variants
+// ===================
+.btn--primary {
+    // background: $btn-primary;
+    color: #fff;
+    border-color: $btn-border;
+    padding: 10px 30px;
+
+    &:hover,
+    &:focus {
+        // background: lighten($btn-primary, 4%);
+        color: #fff;
+        border-color: $btn-hover-border;
+    }
+}
+
+.btn--danger {
+    background: $btn-danger-bg !important;
+    color: $btn-danger-fg !important;
+    border-color: #6f2323 !important;
+
+    &:hover,
+    &:focus {
+        background: #5c3f4b !important;
+        color: #fad0d5 !important;
+        border-color: $btn-danger-border !important;
+    }
+}
+
+.btn--success {
+    background: $btn-success-bg !important;
+    color: $btn-success-fg !important;
+    border-color: $btn-success-border !important;
+
+    &:hover,
+    &:focus {
+        background: color.adjust($btn-success-bg, $lightness: -6%);
+
+        color: #eafedc !important;
+        border-color: color.adjust($btn-success-border, $lightness: 18%) !important;
+
+    }
+}
+
+// For icon-only (circle/square/copy/save) buttons
+.btn--icon {
+    padding: 0.36em 0.9em 0.36em 0.9em;
+    // width: 2.8em;
+    // height: 2.5em;
+    justify-content: center;
+    align-items: center;
+
+    svg {
+        width: 1.51em;
+        height: 1.51em;
+        display: block;
+        transition: transform 0.38s, color 0.15s;
+    }
+
+    background: $btn-icon-bg;
+    border-color: $btn-icon-border;
+    color: var(--color-accent-green);
+
+    &:hover,
+    &:focus {
+        background: $btn-copy-hover-bg;
+        color: var(--color-accent-main);
+        border-color: $btn-copy-hover-border;
+    }
+}
+
+.btn--copy {
+    background: $btn-icon-bg;
+    color: $btn-primary;
+    border-color: $btn-icon-border;
+
+    &:hover,
+    &:focus {
+        background: $btn-copy-hover-bg;
+        color: $btn-copy-hover-fg;
+        border-color: $btn-copy-hover-border;
+    }
+
+    &:hover svg,
+    &:focus svg {
+        color: var(--color-clip-btn-hover-text);
+        transform: scale(1.12) rotate(-3deg);
+    }
+}
+
+.btn--save {
+    background: $btn-save-bg;
+    color: $btn-save-fg;
+    border-color: $btn-icon-border;
+
+    &:hover,
+    &:focus {
+        background: $btn-save-hover-bg;
+        color: $btn-save-hover-fg;
+        border-color: $btn-save-hover-border;
+    }
+
+    &:hover svg,
+    &:focus svg {
+        color: var(--color-save-btn-hover-text);
+        transform: scale(1.12) rotate(3deg);
+    }
+}
+
+
+// -------------
+// Responsive tweaks (optional)
+@media (max-width: 600px) {
+    .btn {
+        font-size: 0.89em;
+        padding: 0.37em 1em;
+    }
+
+    .btn--icon {
+        font-size: 0.82em;
+        width: 1.8em;
+        height: 1.8em;
+    }
+}

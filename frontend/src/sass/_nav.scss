@@ -1,0 +1,98 @@
+// Navbar styles
+nav {
+    width: 100vw;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: var(--color-nav);
+    padding: 1.5em 2em 1em 2em;
+    box-shadow: 0 4px 20px var(--color-box-shadow);
+    z-index: 1000;
+    transition: background 0.32s cubic-bezier(0.71, 0, 0.37, 1), box-shadow 0.32s;
+
+    &.navbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    &.nav-transparent {
+        background: var(--color-nav-transparent);
+        box-shadow: 0 8px 30px 0 var(--color-nav-shadow);
+    }
+
+    h1 {
+        margin: 0;
+        color: var(--color-title);
+        letter-spacing: 0.04em;
+        font-size: 2em;
+    }
+
+    .app-version {
+        font-size: 1em;
+        color: var(--color-title);
+        opacity: 0.77;
+        margin-left: 2em;
+        margin-right: 5rem;
+    }
+}
+
+#nav-loading-beam {
+    top: 5.3em;
+}
+
+.navbar {
+    &--group {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+}
+
+// --- Hamburger Menu ---
+.hamburger {
+    background: none;
+    border: none;
+    padding: 0.6em;
+    margin-right: 1.5em;
+    margin-left: -0.5em;
+    cursor: pointer;
+    color: var(--color-title); // or $color-accent-main
+    border-radius: 6px;
+    transition: background 0.2s;
+    outline: none;
+    display: flex;
+    align-items: center;
+    z-index: 1201;
+
+    // Hamburger spin animation
+    &.open {
+        animation: hamburger-spin 0.38s cubic-bezier(.43, 1.9, .26, 1) 1;
+        /* Stays rotated after spin for demo, but can rotate back if toggled again */
+    }
+
+    svg {
+        width: 28px;
+        height: 28px;
+    }
+
+    &:hover,
+    &:focus {
+        background: #213b5332;
+    }
+}
+
+@keyframes hamburger-spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    80% {
+        transform: rotate(320deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
