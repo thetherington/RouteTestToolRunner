@@ -42,14 +42,28 @@
           stroke-width="2.4" stroke-linecap="round" />
       </svg>
     </button>
-    <div class="panel-content">
-      <!-- (Future) informational content goes here -->
+    <div class="panel-content schedule-panel">
       <h2>Schedule Job</h2>
-      <p>Schedule a Job to run in the future</p>
-      <div>
-        <input type="text" class="input input--success" id="myDatePicker"
-          placeholder="Select a date">
-        <button class="btn btn--success">Save</button>
+      <div class="schedule-form-backdrop">
+        <form id="scheduleForm" class="schedule-form">
+          <label>
+            Schedule Time:
+          </label>
+          <input id="schedulePicker" class="input" type="text"
+            placeholder="Select date and time" />
+          <div>
+            <button id="saveScheduleBtn" class="btn btn--primary" type="submit"
+              disabled>Save</button>
+            <button id="cancelEditBtn" class="btn btn--danger" type="button"
+              title="Cancel edit" hidden>
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+      <hr class="schedule-divider" />
+      <div id="scheduleList" class="schedule-list">
+        <!-- JS will render cards here -->
       </div>
     </div>
   </aside>

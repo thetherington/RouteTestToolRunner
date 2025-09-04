@@ -16,5 +16,10 @@ export function getDom() {
         menuBtn: document.getElementById("menuBtn"),
         slidePanel: document.getElementById("slidePanel"),
         closePanelBtn: document.getElementById("closePanelBtn"),
+        form: document.getElementById("scheduleForm"),
+        picker: document.getElementById("schedulePicker"),
+        list: document.getElementById("scheduleList"),
+        outputPanel: document.getElementById("output"),
+        saveScheduleBtn: document.getElementById("saveScheduleBtn"),
     };
 }

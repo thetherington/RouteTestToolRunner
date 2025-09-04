@@ -1,8 +1,6 @@
-import { getDom } from "./dom.js";
-
-export class UI {
-    constructor() {
-        this.dom = getDom();
+export class UIController {
+    constructor(dom) {
+        this.dom = dom;
     }
 
     /**

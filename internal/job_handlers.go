@@ -8,7 +8,7 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func RegisterHandlers(r chi.Router, app *App) {
+func RegisterJobHandlers(r chi.Router, app *App) {
 	r.Post("/api/runjob", func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.Background()
 		result := app.RunJob(ctx)

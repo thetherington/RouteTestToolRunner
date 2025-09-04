@@ -1,11 +1,10 @@
-import { getDom } from "./dom.js";
 import * as api from "./api.js";
 import { registerActions } from "./actions.js";
 
-export class App {
-    constructor(ui) {
+export class AppController {
+    constructor(dom, ui) {
+        this.dom = dom;
         this.ui = ui;
-        this.dom = getDom();
         this.polling = false;
         this.statusTimer = null;
     }

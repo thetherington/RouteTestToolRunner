@@ -12,6 +12,16 @@ import (
 
 var AppVersion = "dev" // Default; will be overwritten by -ldflags at build time
 
+type Schedule struct {
+	ID     string `json:"id"`
+	Time   string `json:"time"` // or time.Time, but send as string to frontend
+	IsPast bool   `json:"isPast,omitempty"`
+}
+
+type ScheduleResult struct {
+	Output string `json:"output"`
+}
+
 type JobResult struct {
 	SchedulerOutput string
 	SDVNOutput      string
@@ -34,12 +44,19 @@ type App struct {
 	// Job-cancellation support:
 	jobCancel     context.CancelFunc
 	activeSession *ssh.Session
+
+	// Schedule maps
+	scheduleMutex   sync.Mutex
+	schedules       map[string]*Schedule // in-memory fake DB for demo
+	scheduleResults map[string]*ScheduleResult
 }
 
 // Construction
 func NewApp(config *AppConfig) (*App, error) {
 	app := &App{
-		Config: config,
+		Config:          config,
+		schedules:       map[string]*Schedule{},
+		scheduleResults: map[string]*ScheduleResult{},
 	}
 
 	app.jobActivity = "Idle"
@@ -55,7 +72,8 @@ func NewApp(config *AppConfig) (*App, error) {
 		AllowCredentials: true,
 	}))
 
-	RegisterHandlers(r, app)
+	RegisterJobHandlers(r, app)
+	RegisterSchedulerHandlers(r, app)
 	RegisterFrontend(r)
 
 	app.Router = r
