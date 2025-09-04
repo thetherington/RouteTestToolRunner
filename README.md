@@ -1,6 +1,6 @@
 # Route Test Tool Runner
 
-A web-based tool for remotely executing scripts on two hosts over SSH, with secure credential management, robust job handling, RESTful API, and a modern, responsive frontend for real-time status, results retrieval, and advanced UX.
+A web-based tool for remotely executing scripts on two hosts over SSH, scheduling jobs in advance, and presenting robust job status and results—featuring secure credential management, full REST API, and a modern, embeddable frontend built with Vite, JavaScript, and SASS.
 
 ---
 
@@ -16,6 +16,25 @@ A web-based tool for remotely executing scripts on two hosts over SSH, with secu
 -   **User Experience:** Animated loading spinner, pulsating beam under the navbar, in-app toasts (error/success), scroll-sensitive transparent navbar.
 -   **Versioned & Scriptable:** Build-time version display in both the console and UI; Makefile-based build/run with CLI version injection.
 
+## Scheduler Features
+
+-   **Full CRUD for Job Schedules:**  
+    Create, read, update, or delete schedule entries via a user-friendly card UI in the slide-out panel. Users pick date/time with a modern Flatpickr widget.
+-   **One-Job-at-a-Time Execution (Manual or Scheduled):**  
+    Only a single job (manual, or background-scheduled) can run at any moment, enforced at the backend; all UI disables/reflects wait state accordingly.
+-   **Persistent Scheduling (using gocron):**  
+    Each schedule is registered as a unique job with go-co-op/gocron. Scheduled jobs will trigger the same SSH orchestration as a manual job at their specified time.
+-   **Conflict Detection:**  
+    When schedules are created or updated, the API checks for conflicts (overlapping jobs) within a configurable window and returns an error if the new schedule overlaps an existing job.
+-   **Cancel Support:**  
+    Running scheduled jobs may be canceled/stopped from the frontend just like a manual run, forcibly interrupting any SSH process.
+-   **Result Reporting:**  
+    After scheduled jobs run (or if canceled), their logs/output are stored and can be loaded into the UI via “View report”/“Run report” on the schedule card.
+-   **Frontend CRUD UX:**  
+    All schedule operations (CRUD, run report) are managed in a dedicated ScheduleController class and rendered as SASS-styled cards inside the slideout panel.
+-   **Error Surfacing:**  
+    If the backend rejects a schedule for any reason (e.g., conflict, invalid date), the associated error message is shown immediately and clearly in the schedule form.
+
 ---
 
 ## Directory Overview
@@ -23,19 +42,31 @@ A web-based tool for remotely executing scripts on two hosts over SSH, with secu
 ```
 RouteTestToolRunner/
 ├── cmd/
-│    └── main.go
+│    └── main.go                      # Go backend main entrypoint
 ├── internal/
 │    ├── app.go
 │    ├── config.go
 │    ├── handlers.go
 │    ├── sshjob.go
-│    ├── frontend.go
-│    └── web/
+│    ├── schedule.go
+│    ├── frontend.go                  # Go static asset handler with SPA support
+│    └── web/                         # Where Vite build outputs go (embedded in Go binary)
 │         ├── index.html
+│         ├── style.css
 │         ├── main.js
-│         └── style.css
-├── config.yaml
-├── .env
+│         ├── ... (other JS/CSS/assets from Vite)
+├── frontend/                         # Vite app src (npm, SASS, Flatpickr, etc)
+│    ├── index.html
+│    ├── main.js
+│    ├── schedule-controller.js
+│    ├── scss/
+│    │    ├── _button.scss
+│    │    ├── _input.scss
+│    │    ├── _schedule.scss
+│    │    └── style.scss
+│    └── ... (Vite config, npm pkg files, etc)
+├── config.yaml                       # Host IPs and command lists (YAML)
+├── .env                              # SSH user/password per host
 ├── go.mod
 ├── makefile
 ```
@@ -106,15 +137,45 @@ Use from any computer that can reach the server.
 
 ## Usage Details
 
-### Web App (Frontend)
+## Vite Frontend: npm Scripts & Workflow
 
--   **Run Route Test:** Starts a job that SSHs into the scheduler host, runs its commands (in order, stopping on first failure), then does the same for the sdvn host. Results are displayed in the output panel.
--   **Status Panel:** Shows in real time whether a job is running and the exact backend step (connection, command, output).
--   **Copy Output:** Use the button (clipboard SVG) to copy the result to the clipboard once available.
--   **Save Output:** Click the save button (floppy SVG) to download the output as a `.txt` file named with today’s date.
--   **Fetch Last Result:** The down-arrow button retrieves the latest result from the past job, without launching a new job.
--   **Toasts:** Inform you of success/failure of job runs and copy/save actions.
--   **Loading Indicators:** Spinner beside Run, animated light beam below the navbar when running.
+### Setup
+
+```sh
+cd frontend
+npm install
+```
+
+### Common Scripts
+
+-   **Development (hot reload, local dev server):**
+
+    ```sh
+    npm run dev
+    ```
+
+    _Runs the SPA at localhost:5173 (or as configured); best for UI development. Proxy setup may be needed for API routes if testing against the running Go backend._
+
+-   **Build for Go Backend (production):**
+
+    ```sh
+    npm run build
+    ```
+
+    _Outputs all JS/CSS/static files to ../internal/web/. The backend will then embed and serve these assets._
+
+-   **Preview Built App:**
+    ```sh
+    npm run preview
+    ```
+    _Serves the production build (for QA, before backend embedding)._
+
+### Using SASS and JavaScript
+
+-   All styles should be authored in `frontend/src/scss/` and imported in `style.scss` (e.g. `@import "button"; @import "schedule";` etc).
+-   You can organize controller logic (such as ScheduleController) and all utility modules in JS/ES module files under frontend/src/.
+
+---
 
 ### Backend (API)
 
@@ -144,28 +205,52 @@ Use from any computer that can reach the server.
 
 ---
 
-## Example: Build and Run
+## Example Workflow
 
 ```sh
-# Build with version info
-make build VERSION=2.5.1
+# 1. Build frontend for backend embedding
+cd frontend
+npm run build
 
-# Run on port 9090 with your chosen config file
-make run CONFIG=myconfig.yaml PORT=9090
+# 2. Build and start Go backend from project root
+make build VERSION=2.7.4
+make run CONFIG=config.yaml PORT=8080
 
-# Now browse to: http://localhost:9090/
+# 3. Browse to: http://localhost:8080/
+# 4. Use the hamburger/menu panel to create and manage schedules.
 ```
 
 ---
 
-## Architecture Overview
+## Backend Libraries Used
 
--   **Go backend**: Handles all HTTP, job state, concurrency, and SSH orchestration.
--   **Frontend**: Static HTML/CSS/JS embedded via Go’s embed for zero-deps deployment.
--   **Chi v5**: For REST API, logging, CORS, and panic recovery.
--   **Viper**: To load host IPs/commands from YAML at boot; live editing requires app restart.
--   **Job concurrency**: Single job at a time (mutex lock); backend prevents overlap.
--   **No sensitive credentials in sources**: all usernames/passwords in `.env`.
+-   **go-co-op/gocron:** Registers and manages scheduled jobs, runs background tasks, mutually exclusive with manual runs.
+-   **go-chi/chi:** HTTP routing, REST APIs, and middleware setup.
+-   **spf13/viper:** Loads hosts and commands from `config.yaml`.
+-   **joho/godotenv:** Loads separate per-host SSH credentials from `.env`.
+-   **golang.org/x/crypto/ssh:** Handles remote SSH command orchestration.
+
+---
+
+## Key Scheduler Table
+
+| Feature              | User Experience                                           | API/Backend                                          |
+| -------------------- | --------------------------------------------------------- | ---------------------------------------------------- |
+| Create schedule      | Flatpickr, only valid times enabled, errors shown         | `POST /api/schedules`, 409 if conflict (overlap)     |
+| Edit/update schedule | Edit icon on schedule card, pre-loads picker              | `PUT /api/schedules/:id`, applies conflict check     |
+| Delete schedule      | Trash icon removes immediately, live update               | `DELETE /api/schedules/:id`, all live jobs removed   |
+| List/order schedules | Running jobs at top, future by soonest, past at bottom    | Schedules sorted in Go & UI                          |
+| Run/cancel job       | Spinner, light beam, badge always reflect real job status | Unified mutex/state gating                           |
+| Output/reporting     | Badge “Manual Run” or “Scheduled Job” above output        | Any job result available `/api/schedules/:id/result` |
+| Error feedback       | Form field, toast, and notification feedback              | Returns proper status code/messages on error         |
+
+---
+
+## For Developers
+
+-   **Frontend authoring:** All SASS and modular JS in `frontend/`, best authored via Vite hotreload.
+-   **Embedding/serving:** Built with Vite, all frontend assets are embedded in Go via Go 1.16+ `embed.FS` and a general SPA handler.
+-   **Extensible architecture:** Fully ready for integrations like DB persistence or more advanced scheduling in the future.
 
 ---
 
@@ -183,25 +268,6 @@ When you run the app, the console shows:
 Application Version: 2.5.1
 Server listening on :9090
 ```
-
----
-
-## Dependency List
-
--   [Go 1.20+](https://golang.org/)
--   [Chi v5](https://github.com/go-chi/chi/v5) + [cors](https://github.com/go-chi/cors)
--   [joho/godotenv](https://github.com/joho/godotenv)
--   [spf13/viper](https://github.com/spf13/viper)
--   [x/crypto/ssh](https://pkg.go.dev/golang.org/x/crypto/ssh)
-
----
-
-## Development Workflow
-
-1. Edit your Go code or frontend assets.
-2. Update `.env`/`config.yaml` as needed for your test lab or deployment.
-3. Run `make build` then `make run`.
-4. Test in browser, interact with the REST API, and monitor the console banner/status output.
 
 ---
 

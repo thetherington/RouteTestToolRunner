@@ -20,7 +20,7 @@ export function registerActions(app) {
             e.key === "Escape" &&
             app.dom.slidePanel.classList.contains("open")
         ) {
-            app.closeMenu();
+            app.ui.closeMenu();
         }
     });
 }

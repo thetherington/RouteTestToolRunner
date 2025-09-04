@@ -56,6 +56,17 @@
     }
 }
 
+.loading-beam-card {
+    @extend .loading-beam;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+
+    &[hidden] {
+        display: none !important;
+    }
+}
+
 @keyframes spin {
     0% {
         transform: rotate(0deg);

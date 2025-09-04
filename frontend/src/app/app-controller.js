@@ -1,11 +1,11 @@
-import { getDom } from "./dom.js";
 import * as api from "./api.js";
 import { registerActions } from "./actions.js";
 
-export class App {
-    constructor(ui) {
+export class AppController {
+    constructor(dom, ui, schedule) {
+        this.dom = dom;
         this.ui = ui;
-        this.dom = getDom();
+        this.schedule = schedule;
         this.polling = false;
         this.statusTimer = null;
     }
@@ -44,7 +44,7 @@ export class App {
         }
 
         this.dom.status.textContent = "Status: Starting job...";
-        this.ui.setOutputResult("");
+        this.ui.setOutputResult("", null);
         this.ui.setButtonState(true);
 
         const resp = await api.fetchRunJob();
@@ -63,14 +63,14 @@ export class App {
      */
     async fetchLastResult() {
         const data = await api.fetchJobResult();
-
+        console.log(data);
         try {
             // Compose output just like the main poll logic
-            this.ui.setOutputResult(
-                `Scheduler:\n${data.SchedulerOutput}\n\nSDVN:\n${
-                    data.SDVNOutput
-                }\n${data.Error ? "\nError: " + data.Error : ""}`
-            );
+            const output = `Scheduler:\n${data.SchedulerOutput}\n\nSDVN:\n${
+                data.SDVNOutput
+            }\n${data.Error ? "\nError: " + data.Error : ""}`;
+
+            this.ui.setOutputResult(output, data.RunType);
 
             this.ui.showToast("Fetched Previous Results!", "success");
         } catch (error) {
@@ -171,11 +171,11 @@ export class App {
         } else {
             this.dom.status.textContent = "Status: Job finished.";
 
-            this.ui.setOutputResult(
+            const output =
                 `Scheduler:\n${data.SchedulerOutput}\n\n` +
-                    `SDVN:\n${data.SDVNOutput}\n` +
-                    `${data.Error ? "\nError: " + data.Error : ""}`
-            );
+                `SDVN:\n${data.SDVNOutput}\n` +
+                `${data.Error ? "\nError: " + data.Error : ""}`;
+            this.ui.setOutputResult(output, data.RunType);
 
             this.ui.setButtonState(false);
             this.polling = false;
@@ -186,6 +186,9 @@ export class App {
             } else {
                 this.ui.showToast("Job completed successfully.", "success");
             }
+
+            // refresh the schedules incase one was ran
+            this.schedule.loadSchedules();
         }
     }
 

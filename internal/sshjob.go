@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"log/slog"
-	"strings"
 	"time"
 
 	"golang.org/x/crypto/ssh"
@@ -31,7 +29,7 @@ type SSHJobTarget struct {
 // Returns the complete aggregated output for all completed commands and an error if the job was stopped
 // or a command failed.
 func sshRunCmd(ctx context.Context, app *App, target SSHJobTarget) (string, error) {
-	app.setJobActivity(fmt.Sprintf("Connecting to %s (%s) via SSH...", target.Label, target.IP))
+	app.SetJobActivity(fmt.Sprintf("Connecting to %s (%s) via SSH...", target.Label, target.IP))
 	config := &ssh.ClientConfig{
 		User: target.User,
 		Auth: []ssh.AuthMethod{
@@ -50,7 +48,7 @@ func sshRunCmd(ctx context.Context, app *App, target SSHJobTarget) (string, erro
 	var combinedOutput string
 
 	for i, cmd := range target.Commands {
-		app.setJobActivity(fmt.Sprintf(
+		app.SetJobActivity(fmt.Sprintf(
 			"Running command %d/%d on %s (%s):\n%s",
 			i+1, len(target.Commands), target.Label, target.IP, cmd,
 		))
@@ -121,8 +119,10 @@ func (app *App) RunJob(ctx context.Context) JobResult {
 		return JobResult{Running: true, Error: "job already running"}
 	}
 
-	// background job
+	// background routine to run the job
 	go func() {
+		defer app.ResetApp()
+
 		app.running = true
 		app.jobActivity = "Starting job"
 
@@ -132,63 +132,7 @@ func (app *App) RunJob(ctx context.Context) JobResult {
 
 		app.mutex.Unlock()
 
-		defer func() {
-			app.mutex.Lock()
-			app.running = false
-			app.jobCancel = nil
-			app.activeSession = nil
-			app.jobActivity = "Idle"
-			app.mutex.Unlock()
-		}()
-
-		result := JobResult{Running: false}
-
-		// ------- Step 1: Connecting to scheduler
-		app.setJobActivity("Preparing to connect to scheduler")
-		schedTarget := SSHJobTarget{
-			Label:    "scheduler",
-			IP:       app.Config.File.Scheduler.IP,
-			User:     app.Config.SchedulerSSH.User,
-			Pass:     app.Config.SchedulerSSH.Pass,
-			Commands: app.Config.File.Scheduler.Commands,
-		}
-		schedOut, err := sshRunCmd(ctx, app, schedTarget)
-		result.SchedulerOutput = schedOut
-		if err != nil {
-			if ctx.Err() == context.Canceled {
-				result.Error = err.Error()
-				slog.Warn(result.Error)
-			} else {
-				result.Error = "Scheduler script error: " + err.Error()
-				slog.Error("Scheduler script", "error", err, "output", schedOut)
-			}
-
-			app.setLastResult(result)
-			return
-		}
-
-		// ------- Step 2: Connecting to sdvn
-		app.setJobActivity("Preparing to connect to sdvn")
-		sdvnTarget := SSHJobTarget{
-			Label:    "sdvn",
-			IP:       app.Config.File.Sdvn.IP,
-			User:     app.Config.SdvnSSH.User,
-			Pass:     app.Config.SdvnSSH.Pass,
-			Commands: app.Config.File.Sdvn.Commands,
-		}
-		sdvnOut, err := sshRunCmd(ctx, app, sdvnTarget)
-		result.SDVNOutput = sdvnOut
-		if err != nil {
-			if ctx.Err() == context.Canceled {
-				result.Error = err.Error()
-				slog.Warn(result.Error)
-			} else {
-				result.Error = "SDVN script error: " + err.Error()
-				slog.Error("SDVN script", "error", err, "output", sdvnOut)
-			}
-		}
-
-		app.setLastResult(result)
+		app.SetLastResult(app.ExecuteRunnerTasks(ctx, Manual))
 	}()
 
 	return JobResult{Running: true}
@@ -219,33 +163,6 @@ func (app *App) StopJob() error {
 	app.jobActivity = "Stopped by user"
 
 	return nil
-}
-
-func (app *App) GetLastResult() JobResult {
-	app.mutex.Lock()
-	defer app.mutex.Unlock()
-
-	result := app.lastResult
-	result.Running = app.running
-
-	return result
-}
-
-// Helper functions for safe activity and app variable update
-func (app *App) setLastResult(res JobResult) {
-	app.mutex.Lock()
-	defer app.mutex.Unlock()
-
-	app.lastResult = res
-}
-
-func (app *App) setJobActivity(desc string) {
-	app.mutex.Lock()
-
-	slog.Info(strings.ReplaceAll(desc, "\n", ""))
-	app.jobActivity = desc
-
-	app.mutex.Unlock()
 }
 
 func (app *App) setActiveSession(s *ssh.Session) {

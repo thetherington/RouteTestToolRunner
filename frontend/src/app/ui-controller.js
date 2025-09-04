@@ -1,8 +1,10 @@
-import { getDom } from "./dom.js";
+export class UIController {
+    constructor(dom) {
+        this.dom = dom;
+    }
 
-export class UI {
-    constructor() {
-        this.dom = getDom();
+    setSchedulerController(sched) {
+        this.scheduler = sched;
     }
 
     /**
@@ -62,17 +64,32 @@ export class UI {
     /**
      * Helper function to set the output content and display the copy/save buttons
      * @param {string} result - Result data
+     * @param {string} runType - Type (manual || schedule || scheduled)
      */
-    setOutputResult(result) {
+    setOutputResult(result, runType) {
         this.dom.output.textContent = result;
 
         // Show button only if output is non-empty (excluding whitespace)
         if (result && result.trim().length > 0) {
             this.dom.copyBtn.hidden = false;
             this.dom.saveBtn.hidden = false;
+
+            // Show and style the badge
+            if (runType === "manual") {
+                this.dom.badge.textContent = "Manual Run";
+                this.dom.badge.className = "output-source-badge manual";
+                this.dom.badge.hidden = false;
+            } else if (runType === "schedule" || runType === "scheduled") {
+                this.dom.badge.textContent = "Scheduled Job";
+                this.dom.badge.className = "output-source-badge schedule";
+                this.dom.badge.hidden = false;
+            } else {
+                this.dom.badge.hidden = true;
+            }
         } else {
             this.dom.copyBtn.hidden = true;
             this.dom.saveBtn.hidden = true;
+            this.dom.badge.hidden = true;
         }
     }
 
@@ -80,6 +97,7 @@ export class UI {
      * Opens the sidebar slide out menu
      */
     openMenu() {
+        this.scheduler.loadSchedules();
         this.dom.menuBtn.classList.add("open");
         this.dom.slidePanel.classList.add("open");
         this.dom.slidePanel.ariaHidden = "false";
@@ -92,5 +110,34 @@ export class UI {
         this.dom.slidePanel.classList.remove("open");
         this.dom.menuBtn.classList.remove("open");
         this.dom.slidePanel.ariaHidden = "true";
+    }
+
+    // Call this before any API call or successful save
+    clearFormError() {
+        this.dom.errorDiv.textContent = "";
+        this.dom.errorDiv.hidden = true;
+    }
+
+    // Call this to display any error in the form
+    showFormError(message) {
+        this.dom.errorDiv.innerHTML = `
+        <div>${message || "Failed to save schedule. Please try again."}</div> 
+        <button id="closeAlert" class="btn-sm btn--icon btn--danger" title="Delete" aria-label="Delete">
+            <svg width="128" height="128" viewBox="0 0 28 28" aria-hidden="true"
+                focusable="false">
+                <line x1="8" y1="8" x2="20" y2="20" stroke="currentColor"
+                    stroke-width="2.4" stroke-linecap="round" />
+                <line x1="20" y1="8" x2="8" y2="20" stroke="currentColor"
+                    stroke-width="2.4" stroke-linecap="round" />
+            </svg>
+        </button>
+        `;
+
+        this.dom.errorDiv.querySelector("button").onclick = (e) => {
+            e.preventDefault();
+            this.clearFormError();
+        };
+
+        this.dom.errorDiv.hidden = false;
     }
 }
