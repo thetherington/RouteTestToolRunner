@@ -1,0 +1,70 @@
+// --- Slide-out Panel ---
+.slide-panel {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 35vw;
+    min-width: 295px;
+    max-width: 540px;
+    height: 100vh;
+    background: #23273af4; // matches theme, slightly translucent
+    color: var(--color-fg);
+    box-shadow: 3px 0 38px -6px rgba(42, 75, 175, 0.19), 2px 0 0 #181b22cc;
+    z-index: 2002;
+    transform: translateX(-105%);
+    transition: transform 0.45s cubic-bezier(.55, 1.2, .32, 1), box-shadow 0.2s;
+    will-change: transform;
+    display: flex;
+    flex-direction: column;
+    padding-top: 0;
+    overflow-y: auto;
+
+    &.open {
+        transform: translateX(0);
+        box-shadow: 10px 0 35px -4px #17336f7f, 2px 0 0 #81aaff1c;
+    }
+}
+
+#closePanelBtn {
+    position: absolute;
+    top: 1.05em;
+    right: 1.05em;
+    z-index: 1;
+}
+
+.panel-content {
+    margin: 3.0em 2.3em 2em 2em;
+
+    /* Responsive adjustments as needed */
+    h2 {
+        color: var(--color-title);
+        margin-top: 0;
+        margin-bottom: 0.6em;
+        letter-spacing: 0.02em;
+    }
+
+    p {
+        color: #c7d5ea;
+    }
+}
+
+// Optional: blur the background when slide panel is open (with JS)
+// .panel-backdrop { ... }
+
+@media (max-width: 1000px) {
+    .slide-panel {
+        width: 70vw;
+        min-width: 180px;
+        max-width: none;
+    }
+
+    .panel-content {
+        margin: 2.8em 1.2em 1.2em 1.1em;
+    }
+}
+
+@media (max-width: 600px) {
+    .slide-panel {
+        width: 92vw;
+    }
+}
