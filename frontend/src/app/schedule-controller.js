@@ -7,16 +7,16 @@ import * as api from "./api.js";
 export class ScheduleController {
     constructor(dom, ui) {
         this.ui = ui;
+        this.dom = dom;
 
-        this.form = dom.form;
-        this.pickerInput = dom.picker;
-        this.listPanel = dom.list;
-        this.output = dom.outputPanel;
-        this.saveScheduleBtn = dom.saveScheduleBtn;
+        this.form = dom.scheduleForm;
+        this.pickerInput = dom.pickerInput;
 
-        this.flatpickr = flatpickr(dom.picker, {
+        this.flatpickr = flatpickr(this.pickerInput, {
             enableTime: true,
-            dateFormat: "Y-m-d H:i", // Customize as needed
+            dateFormat: "Z",
+            altInput: true,
+            altFormat: "Y-m-d h:i K",
             minDate: "today",
             // Use onChange to trigger button enable/disable
             onChange: this.handlePickerChange.bind(this),
@@ -33,13 +33,12 @@ export class ScheduleController {
         this.form.onsubmit = (e) => {
             e.preventDefault();
 
-            if (this.saveScheduleBtn.disabled) return;
+            if (this.dom.saveScheduleBtn.disabled) return;
 
             this.editingId ? this.updateSchedule() : this.createSchedule();
         };
 
-        document.getElementById("cancelEditBtn").onclick = () =>
-            this.cancelEdit();
+        this.dom.cancelEditBtn.onclick = () => this.cancelEdit();
     }
 
     async loadSchedules() {
@@ -49,16 +48,16 @@ export class ScheduleController {
     }
 
     renderSchedules(schedules) {
-        this.listPanel.innerHTML = "";
+        this.dom.listPanel.innerHTML = "";
 
         if (schedules.length === 0) {
-            this.listPanel.innerHTML =
+            this.dom.listPanel.innerHTML =
                 "<p class='empty'>No scheduled jobs.</p>";
             return;
         }
 
         schedules.forEach((sched) =>
-            this.listPanel.appendChild(this.createCard(sched))
+            this.dom.listPanel.appendChild(this.createCard(sched))
         );
     }
 
@@ -66,13 +65,13 @@ export class ScheduleController {
         const card = document.createElement("div");
         card.className = "schedule-card" + (sched.isPast ? " past" : "");
         card.innerHTML = `
-        <div class="schedule-info">
-            <div>
-                <strong>
-                    ${this.formatDate(sched.time)}
-                </strong>
-            </div>
-            ${sched.isPast ? "<div class='muted'>(Past job)</div>" : ""}
+            <div class="schedule-info">
+                <div>
+                    <strong>
+                        ${this.formatDate(sched.time)}
+                    </strong>
+                </div>
+                ${sched.isPast ? "<div class='muted'>(Past job)</div>" : ""}
             </div>
             <div class="schedule-actions">
                 <button class="btn-sm btn--icon btn--primary" title="Run report" aria-label="View report">
@@ -102,7 +101,7 @@ export class ScheduleController {
                             stroke-width="2.4" stroke-linecap="round" />
                     </svg>
                 </button>
-        </div>
+            </div>
     `;
         // Attach event listeners
         card.querySelector(".btn--danger").onclick = () =>
@@ -129,16 +128,16 @@ export class ScheduleController {
         this.editingId = schedule.id;
         this.pickerInput.value = schedule.time;
         this.flatpickr.setDate(schedule.time);
-        document.getElementById("saveScheduleBtn").textContent = "Update";
-        document.getElementById("cancelEditBtn").hidden = false;
+        this.dom.saveScheduleBtn.textContent = "Update";
+        this.dom.cancelEditBtn.hidden = false;
     }
 
     cancelEdit() {
         this.editingId = null;
         this.form.reset();
         this.flatpickr.clear();
-        document.getElementById("saveScheduleBtn").textContent = "Save";
-        document.getElementById("cancelEditBtn").hidden = true;
+        this.dom.saveScheduleBtn.textContent = "Save";
+        this.dom.cancelEditBtn.hidden = true;
     }
 
     async updateSchedule() {
@@ -158,7 +157,8 @@ export class ScheduleController {
 
     async loadReport(id) {
         const data = await api.loadReport(id);
-        this.output.textContent = data.output || "(No report available)\n\n";
+        this.dom.output.textContent =
+            data.output || "(No report available)\n\n";
         this.ui.closeMenu();
     }
 
@@ -179,6 +179,6 @@ export class ScheduleController {
             fp.selectedDates.length === 1 &&
             !isNaN(fp.selectedDates[0]);
 
-        this.saveScheduleBtn.disabled = !valid;
+        this.dom.saveScheduleBtn.disabled = !valid;
     }
 }

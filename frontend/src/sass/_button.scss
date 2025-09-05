@@ -98,6 +98,17 @@ $btn-save-hover-border: #79efb6;
     }
 }
 
+.btn-md {
+    @extend .btn;
+
+    height: 2em;
+
+    svg {
+        width: 1.3em !important;
+        height: 1.3em !important;
+    }
+}
+
 // ===================
 // Variants
 // ===================
