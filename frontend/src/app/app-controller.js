@@ -2,9 +2,10 @@ import * as api from "./api.js";
 import { registerActions } from "./actions.js";
 
 export class AppController {
-    constructor(dom, ui) {
+    constructor(dom, ui, schedule) {
         this.dom = dom;
         this.ui = ui;
+        this.schedule = schedule;
         this.polling = false;
         this.statusTimer = null;
     }
@@ -185,6 +186,9 @@ export class AppController {
             } else {
                 this.ui.showToast("Job completed successfully.", "success");
             }
+
+            // refresh the schedules incase one was ran
+            this.schedule.loadSchedules();
         }
     }
 

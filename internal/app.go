@@ -2,20 +2,23 @@ package internal
 
 import (
 	"context"
+	"log"
 	"sync"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
+	"github.com/go-co-op/gocron/v2"
 	"golang.org/x/crypto/ssh"
 )
 
 var AppVersion = "dev" // Default; will be overwritten by -ldflags at build time
 
 type Schedule struct {
-	ID     string `json:"id"`
-	Time   string `json:"time"` // or time.Time, but send as string to frontend
-	IsPast bool   `json:"isPast,omitempty"`
+	ID     string    `json:"id"`
+	Time   time.Time `json:"time"`
+	IsPast bool      `json:"isPast,omitempty"`
 }
 
 type ScheduleResult struct {
@@ -45,16 +48,22 @@ type App struct {
 	jobCancel     context.CancelFunc
 	activeSession *ssh.Session
 
-	// Schedule maps
+	// Schedule
+	scheduler       gocron.Scheduler           // global scheduler instance
+	scheduleJobs    map[string]gocron.Job      // schedule id → gocron.Job
+	schedules       map[string]*Schedule       // id → schedule struct
+	scheduleResults map[string]*ScheduleResult // id → result/output for completed jobs
 	scheduleMutex   sync.Mutex
-	schedules       map[string]*Schedule // in-memory fake DB for demo
-	scheduleResults map[string]*ScheduleResult
 }
 
 // Construction
 func NewApp(config *AppConfig) (*App, error) {
+	sched, _ := gocron.NewScheduler()
+
 	app := &App{
 		Config:          config,
+		scheduler:       sched,
+		scheduleJobs:    make(map[string]gocron.Job),
 		schedules:       map[string]*Schedule{},
 		scheduleResults: map[string]*ScheduleResult{},
 	}
@@ -77,6 +86,9 @@ func NewApp(config *AppConfig) (*App, error) {
 	RegisterFrontend(r)
 
 	app.Router = r
+
+	log.Print("Starting Scheduler")
+	app.scheduler.Start()
 
 	return app, nil
 }

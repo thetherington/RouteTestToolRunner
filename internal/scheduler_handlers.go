@@ -2,7 +2,9 @@ package internal
 
 import (
 	"encoding/json"
+	"log/slog"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
@@ -33,45 +35,87 @@ func RegisterSchedulerHandlers(r chi.Router, app *App) {
 			return
 		}
 
-		id := uuid.New().String()
-		sched := &Schedule{ID: id, Time: req.Time}
-
-		app.scheduleMutex.Lock()
-
-		if app.schedules == nil {
-			app.schedules = map[string]*Schedule{}
+		schedTime, err := time.Parse(time.RFC3339, req.Time)
+		if err != nil {
+			http.Error(w, "invalid time", http.StatusBadRequest)
+			return
 		}
 
-		app.schedules[id] = sched
+		// Conflict check
+		if conflict := app.checkScheduleConflict(schedTime, ""); conflict != "" {
+			w.WriteHeader(http.StatusConflict)
+			json.NewEncoder(w).Encode(map[string]string{"error": conflict})
+			return
+		}
 
+		id := uuid.New().String()
+		sched := &Schedule{ID: id, Time: schedTime}
+
+		app.scheduleMutex.Lock()
+		app.schedules[id] = sched
 		app.scheduleMutex.Unlock()
+
+		if err := app.addGocronJobForSchedule(sched); err != nil {
+			slog.Error("failed to create cron task", "error", err)
+			http.Error(w, "internal failure", http.StatusInternalServerError)
+			return
+		}
 
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(sched)
 	})
 
 	r.Put("/api/schedules/{id}", func(w http.ResponseWriter, r *http.Request) {
-		id := chi.URLParam(r, "id")
+		scheduleID := chi.URLParam(r, "id")
 
-		var in struct {
+		var req struct {
 			Time string `json:"time"`
 		}
 
-		if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			http.Error(w, "bad request", http.StatusBadRequest)
 			return
 		}
 
-		app.scheduleMutex.Lock()
-		defer app.scheduleMutex.Unlock()
-
-		sched, ok := app.schedules[id]
-		if !ok {
-			http.Error(w, "not found", http.StatusNotFound)
+		schedTime, err := time.Parse(time.RFC3339, req.Time)
+		if err != nil {
+			http.Error(w, "invalid time", http.StatusBadRequest)
 			return
 		}
 
-		sched.Time = in.Time
+		// Conflict, but allow for updating THIS schedule
+		if conflict := app.checkScheduleConflict(schedTime, scheduleID); conflict != "" {
+			w.WriteHeader(http.StatusConflict)
+			json.NewEncoder(w).Encode(map[string]string{"error": conflict})
+			return
+		}
+
+		var sched *Schedule
+		var ok bool
+
+		func() {
+			app.scheduleMutex.Lock()
+			defer app.scheduleMutex.Unlock()
+
+			sched, ok = app.schedules[scheduleID]
+			if !ok {
+				http.Error(w, "not found", http.StatusNotFound)
+				return
+			}
+
+			// Remove old job, update, add new job
+			if oldJob, has := app.scheduleJobs[scheduleID]; has {
+				app.scheduler.RemoveJob(oldJob.ID())
+			}
+		}()
+
+		sched.Time = schedTime
+
+		if err := app.addGocronJobForSchedule(sched); err != nil {
+			slog.Error("failed to create cron task", "error", err)
+			http.Error(w, "internal failure", http.StatusInternalServerError)
+			return
+		}
 
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(sched)
@@ -83,12 +127,13 @@ func RegisterSchedulerHandlers(r chi.Router, app *App) {
 		app.scheduleMutex.Lock()
 		defer app.scheduleMutex.Unlock()
 
-		if _, ok := app.schedules[id]; !ok {
-			http.Error(w, "not found", http.StatusNotFound)
-			return
+		delete(app.schedules, id)
+
+		if job, ok := app.scheduleJobs[id]; ok {
+			app.scheduler.RemoveJob(job.ID())
+			delete(app.scheduleJobs, id)
 		}
 
-		delete(app.schedules, id)
 		delete(app.scheduleResults, id)
 
 		w.WriteHeader(http.StatusNoContent)

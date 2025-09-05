@@ -9,8 +9,8 @@ import { ScheduleController } from "./app/schedule-controller.js";
 const dom = getDom();
 
 const ui = new UIController(dom);
-const app = new AppController(dom, ui);
 const schedule = new ScheduleController(dom, ui);
+const app = new AppController(dom, ui, schedule);
 
 app.start();
 schedule.loadSchedules();
