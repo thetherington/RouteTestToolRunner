@@ -32,7 +32,7 @@
 }
 
 .schedule-form-backdrop {
-    background: linear-gradient(90deg, #181b221c 0%, #181b22a1 100%);
+    background: linear-gradient(90deg, #181b22a1 30%, #181b221c 100%);
     padding: 1.3em 1.5em 1.1em 1.5em;
     border-radius: 1.0em;
     box-shadow: 0 1px 2px .5px #0e0f14;
@@ -56,7 +56,7 @@
             #81aaff 30%,
             #d6577f 60%,
             transparent 94%);
-    opacity: 0.34;
+    opacity: 0.74;
     border-radius: 1em;
     box-shadow: 0 2px 8px 0 #181b2233;
 }

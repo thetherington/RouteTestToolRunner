@@ -19,7 +19,6 @@ export function getDom() {
         scheduleForm: document.getElementById("scheduleForm"),
         pickerInput: document.getElementById("schedulePicker"),
         listPanel: document.getElementById("scheduleList"),
-        outputPanel: document.getElementById("output"),
         saveScheduleBtn: document.getElementById("saveScheduleBtn"),
         cancelEditBtn: document.getElementById("cancelEditBtn"),
     };
