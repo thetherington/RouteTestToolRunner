@@ -57,7 +57,7 @@ func main() {
 	}
 
 	// Load SSH credentials from .env and merge them with the file config
-	envCfg, err := internal.LoadAppConfig()
+	envCfg, err := internal.LoadSSHCredentials()
 	if err != nil {
 		log.Fatalf("Error loading SSH credentials from .env: %v", err)
 	}

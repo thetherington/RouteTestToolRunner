@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"golang.org/x/crypto/ssh"
@@ -45,7 +46,7 @@ func sshRunCmd(ctx context.Context, app *App, target SSHJobTarget) (string, erro
 	}
 	defer conn.Close()
 
-	var combinedOutput string
+	var combinedOutput strings.Builder
 
 	for i, cmd := range target.Commands {
 		app.SetJobActivity(fmt.Sprintf(
@@ -55,8 +56,8 @@ func sshRunCmd(ctx context.Context, app *App, target SSHJobTarget) (string, erro
 
 		session, err := conn.NewSession()
 		if err != nil {
-			combinedOutput += fmt.Sprintf("Failed to create session for command %d: %v\n", i+1, err)
-			return combinedOutput, err
+			combinedOutput.WriteString(fmt.Sprintf("Failed to create session for command %d: %v\n", i+1, err))
+			return combinedOutput.String(), err
 		}
 
 		app.setActiveSession(session) // <-- new helper, thread-safe field set
@@ -81,25 +82,25 @@ func sshRunCmd(ctx context.Context, app *App, target SSHJobTarget) (string, erro
 			// Job was canceled by user
 			<-done // wait for the run goroutine to finish
 
-			combinedOutput += fmt.Sprintf("[CANCELED] Command: %s\nOutput:\n%s%s\n", cmd, outBuf.String(), errBuf.String())
+			combinedOutput.WriteString(fmt.Sprintf("[CANCELED] Command: %s\nOutput:\n%s%s\n", cmd, outBuf.String(), errBuf.String()))
 			app.clearActiveSession()
 
-			return combinedOutput, fmt.Errorf("job stopped by user")
+			return combinedOutput.String(), fmt.Errorf("job stopped by user")
 
 		case <-done:
 			app.clearActiveSession()
 
-			combinedOutput += fmt.Sprintf("Command: %s\nOutput:\n%s%s\n", cmd, outBuf.String(), errBuf.String())
+			combinedOutput.WriteString(fmt.Sprintf("Command: %s\nOutput:\n%s%s\n", cmd, outBuf.String(), errBuf.String()))
 			if runErr != nil {
-				combinedOutput += fmt.Sprintf("[ERROR] Command failed: %v\n", runErr)
-				return combinedOutput, runErr
+				combinedOutput.WriteString(fmt.Sprintf("[ERROR] Command failed: %v\n", runErr))
+				return combinedOutput.String(), runErr
 			}
 		}
 
 		session.Close()
 	}
 
-	return combinedOutput, nil
+	return combinedOutput.String(), nil
 }
 
 // RunJob is the primary job orchestration method, launched by the REST API to execute a full job.
