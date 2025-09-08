@@ -13,9 +13,48 @@ pre {
 // Output panel and overlay buttons
 .output-container {
     position: relative;
-    margin-top: 2em;
+    margin-top: 4em;
     width: 100%;
     max-width: 100%;
+
+    .output-source-badge {
+        display: inline-block;
+        position: absolute;
+        top: -1.59em; // adjust as needed to visually "tab" above pre
+        // left: 2.2em;
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 0.18em 1.15em 0.17em 1.15em;
+        font-size: 1em;
+        font-weight: 650;
+        border-radius: 1.2em 1.2em 0.14em 0.14em;
+        box-shadow: 0 2px 8px #23273127;
+        border: 1.5px solid #303860;
+        border-bottom: 2px solid #252a36 !important;
+        background: #233357e7;
+        color: #ffffff;
+        letter-spacing: 0.04em;
+        z-index: 8;
+        user-select: none;
+        pointer-events: none;
+        transition: background 0.20s, color 0.16s, border 0.16s;
+
+        &[hidden] {
+            display: none;
+        }
+    }
+
+    .output-source-badge.manual {
+        background: var(--color-accent-pre-bg);
+        color: #b4d2fd;
+        border-color: var(--color-accent-pre-border);
+    }
+
+    .output-source-badge.schedule {
+        background: var(--color-accent-pre-bg);
+        color: #81aaff;
+        border-color: var(--color-accent-pre-border);
+    }
 
     #copyBtn,
     #saveBtn {
@@ -31,4 +70,8 @@ pre {
     #saveBtn {
         right: 1.2em;
     }
+}
+
+.output-container:has(> .output-source-badge[hidden]) {
+    margin-top: 2em !important;
 }

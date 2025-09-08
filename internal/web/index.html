@@ -5,8 +5,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Route Test Tool</title>
-  <script type="module" crossorigin src="/assets/index-TQ9dvPSe.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/index-CaztIQRl.css">
+  <script type="module" crossorigin src="/assets/index-DjednQt6.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-BGbV7256.css">
 </head>
 
 <body>
@@ -44,14 +44,32 @@
           stroke-width="2.4" stroke-linecap="round" />
       </svg>
     </button>
-    <div class="panel-content">
-      <!-- (Future) informational content goes here -->
+
+    <div class="panel-header">
       <h2>Schedule Job</h2>
-      <p>Schedule a Job to run in the future</p>
-      <div>
-        <input type="text" class="input input--success" id="myDatePicker"
-          placeholder="Select a date">
-        <button class="btn btn--success">Save</button>
+    </div>
+    <div class="panel-content schedule-panel">
+      <div class="schedule-form-backdrop">
+        <form id="scheduleForm" class="schedule-form">
+          <label>
+            Schedule Time:
+          </label>
+          <input id="schedulePicker" class="input" type="text"
+            placeholder="Select date and time" />
+          <div>
+            <button id="saveScheduleBtn" class="btn-md btn--primary"
+              type="submit" disabled>Save</button>
+            <button id="cancelEditBtn" class="btn-md btn--danger" type="button"
+              title="Cancel edit" hidden>
+              Cancel
+            </button>
+          </div>
+          <div id="scheduleFormError" class="schedule-form-error" hidden></div>
+        </form>
+      </div>
+      <hr class="schedule-divider" />
+      <div id="scheduleList" class="schedule-list">
+        <!-- JS will render cards here -->
       </div>
     </div>
   </aside>
@@ -90,9 +108,10 @@
 
   <pre id="status">Status: Checking...</pre>
   <div class="output-container">
+    <span id="outputBadge" class="output-source-badge" hidden></span>
     <pre id="output">Output will appear here.
 
-        </pre>
+    </pre>
     <button id="copyBtn" class="btn btn--icon btn--copy"
       title="Copy output to clipboard" aria-label="Copy output">
       Copy

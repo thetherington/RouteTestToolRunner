@@ -1,17 +1,16 @@
 import "./main.scss";
-import flatpickr from "flatpickr";
-import "flatpickr/dist/themes/dark.css";
 
-import { App } from "./app/app.js";
-import { UI } from "./app/ui.js";
+import { getDom } from "./app/dom.js";
+import { AppController } from "./app/app-controller.js";
+import { UIController } from "./app/ui-controller.js";
+import { ScheduleController } from "./app/schedule-controller.js";
 
-const ui = new UI();
-const app = new App(ui);
+// get all the elements on the page
+const dom = getDom();
+
+const ui = new UIController(dom);
+const schedule = new ScheduleController(dom, ui);
+const app = new AppController(dom, ui, schedule);
 
 app.start();
-
-flatpickr("#myDatePicker", {
-    enableTime: true, // Enables time selection
-    dateFormat: "Y-m-d H:i", // Sets the date and time format
-    // Add other options as needed
-});
+schedule.loadSchedules();
