@@ -7,6 +7,9 @@ scheduler:
 
 sdvn:
   ip: "10.9.0.69"
+  background: > 
+      tail -n 0 -f /var/log/magrtrsrv.log > sxm_router.txt & 
+      tail -n 0 -f /var/log/magclientsrv.log > sxm_client.txt
   commands: 
     - "python3 sdvn_script.py"
     - "echo Done with sdvn"
