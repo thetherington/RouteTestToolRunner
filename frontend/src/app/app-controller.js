@@ -66,11 +66,7 @@ export class AppController {
         console.log(data);
         try {
             // Compose output just like the main poll logic
-            const output = `Scheduler:\n${data.SchedulerOutput}\n\nSDVN:\n${
-                data.SDVNOutput
-            }\n${data.Error ? "\nError: " + data.Error : ""}`;
-
-            this.ui.setOutputResult(output, data.RunType);
+            this.ui.setOutputResult(this.ui.formatOutput(data), data.RunType);
 
             this.ui.showToast("Fetched Previous Results!", "success");
         } catch (error) {
@@ -171,11 +167,7 @@ export class AppController {
         } else {
             this.dom.status.textContent = "Status: Job finished.";
 
-            const output =
-                `Scheduler:\n${data.SchedulerOutput}\n\n` +
-                `SDVN:\n${data.SDVNOutput}\n` +
-                `${data.Error ? "\nError: " + data.Error : ""}`;
-            this.ui.setOutputResult(output, data.RunType);
+            this.ui.setOutputResult(this.ui.formatOutput(data), data.RunType);
 
             this.ui.setButtonState(false);
             this.polling = false;

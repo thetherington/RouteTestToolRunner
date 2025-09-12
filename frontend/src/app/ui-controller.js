@@ -63,6 +63,26 @@ export class UIController {
 
     /**
      * Helper function to set the output content and display the copy/save buttons
+     * @param {object} data - schedule output
+     * @returns {string} formatted output
+     */
+    formatOutput(results) {
+        const seperator = "_".repeat(100) + "\n\n";
+        let outputParts = [];
+
+        outputParts.push(`Scheduler:\n${results.SchedulerOutput}\n\n`);
+        outputParts.push(seperator);
+        outputParts.push(`SDVN:\n${results.SDVNOutput}\n\n`);
+        outputParts.push(seperator);
+        outputParts.push(`Slab:\n${results.SlabOutput}\n\n`);
+        outputParts.push(seperator);
+        outputParts.push(`${results.Error ? "\nError: " + results.Error : ""}`);
+
+        return outputParts.join("");
+    }
+
+    /**
+     * Helper function to set the output content and display the copy/save buttons
      * @param {string} result - Result data
      * @param {string} runType - Type (manual || schedule || scheduled)
      */

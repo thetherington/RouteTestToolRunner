@@ -1,6 +1,7 @@
 scheduler:
   ip: "10.9.0.69"
   commands: 
+    - "date"
     - "python3 scheduler_script.py"
     - "echo Done with scheduler"
 
@@ -9,3 +10,8 @@ sdvn:
   commands: 
     - "python3 sdvn_script.py"
     - "echo Done with sdvn"
+
+slab:
+  commands: 
+    - "python3 slab_logs_script.py -slab iad1bc-slab017 -dst 6 -mcast 239.10.64.203 -insite 10.9.0.69"
+    - "echo Done with slab"

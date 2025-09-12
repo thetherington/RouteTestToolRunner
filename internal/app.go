@@ -2,6 +2,7 @@ package internal
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"log/slog"
 	"strings"
@@ -19,6 +20,7 @@ var AppVersion = "dev" // Default; will be overwritten by -ldflags at build time
 type JobResult struct {
 	SchedulerOutput string
 	SDVNOutput      string
+	SlabOutput      string
 	Error           string
 	Running         bool
 	RunType         RunType
@@ -26,15 +28,13 @@ type JobResult struct {
 
 // App is the main application struct holding all state, config, and HTTP/router details.
 type App struct {
-	Config      *AppConfig
-	SchedulerIP string
-	SdvnIP      string
-	Router      *chi.Mux
+	Config *AppConfig
+	Router *chi.Mux
 
-	mutex       sync.Mutex
 	running     bool
 	lastResult  JobResult
 	jobActivity string
+	mutex       sync.Mutex
 
 	// Job-cancellation support:
 	jobCancel     context.CancelFunc
@@ -91,6 +91,18 @@ func NewApp(config *AppConfig) (*App, error) {
 func (app *App) ExecuteRunnerTasks(ctx context.Context, runType RunType) JobResult {
 	result := JobResult{Running: false, RunType: runType}
 
+	checkErr := func(e error, descr string, output string) {
+		if ctx.Err() == context.Canceled {
+			result.Error = e.Error()
+			slog.Warn(result.Error)
+		} else {
+			result.Error = fmt.Sprintf("%s error: %s", descr, e.Error())
+			slog.Error(descr, "error", e, "output", output)
+		}
+	}
+
+	var err error
+
 	// ------- Step 1: Connecting to scheduler
 	app.SetJobActivity("Preparing to connect to scheduler")
 	schedTarget := SSHJobTarget{
@@ -100,17 +112,9 @@ func (app *App) ExecuteRunnerTasks(ctx context.Context, runType RunType) JobResu
 		Pass:     app.Config.SchedulerSSH.Pass,
 		Commands: app.Config.File.Scheduler.Commands,
 	}
-	schedOut, err := sshRunCmd(ctx, app, schedTarget)
-	result.SchedulerOutput = schedOut
+	result.SchedulerOutput, err = sshRunCmd(ctx, app, schedTarget)
 	if err != nil {
-		if ctx.Err() == context.Canceled {
-			result.Error = err.Error()
-			slog.Warn(result.Error)
-		} else {
-			result.Error = "Scheduler script error: " + err.Error()
-			slog.Error("Scheduler script", "error", err, "output", schedOut)
-		}
-
+		checkErr(err, "Scheduler script", result.SchedulerOutput)
 		return result
 	}
 
@@ -123,16 +127,22 @@ func (app *App) ExecuteRunnerTasks(ctx context.Context, runType RunType) JobResu
 		Pass:     app.Config.SdvnSSH.Pass,
 		Commands: app.Config.File.Sdvn.Commands,
 	}
-	sdvnOut, err := sshRunCmd(ctx, app, sdvnTarget)
-	result.SDVNOutput = sdvnOut
+	result.SDVNOutput, err = sshRunCmd(ctx, app, sdvnTarget)
 	if err != nil {
-		if ctx.Err() == context.Canceled {
-			result.Error = err.Error()
-			slog.Warn(result.Error)
-		} else {
-			result.Error = "SDVN script error: " + err.Error()
-			slog.Error("SDVN script", "error", err, "output", sdvnOut)
-		}
+		checkErr(err, "SDVN script", result.SDVNOutput)
+		return result
+	}
+
+	// ------- Step 3: Run local script for Slab logs
+	app.SetJobActivity("Preparing to run local script")
+	localTarget := LocalJobTarget{
+		Label:    "slab",
+		Commands: app.Config.File.Slab.Commands,
+	}
+	result.SlabOutput, err = localRunCmd(ctx, app, localTarget)
+	if err != nil {
+		checkErr(err, "Slab script", result.SlabOutput)
+		return result
 	}
 
 	return result

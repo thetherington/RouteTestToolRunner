@@ -3,3 +3,4 @@ RouteTestToolRunner
 # Added by goreleaser init:
 dist/
 node_modules
+.vscode

@@ -2,7 +2,9 @@ package internal
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
+	"strings"
 	"time"
 
 	"github.com/go-co-op/gocron/v2"
@@ -108,10 +110,19 @@ func (app *App) runScheduledJob(scheduleID string) {
 	// ---- Execute the Tasks
 	result := app.ExecuteRunnerTasks(ctx, Scheduled)
 
+	var output strings.Builder
+
+	output.WriteString(fmt.Sprintf("Scheduler:\n%s\n\n", result.SchedulerOutput))
+	output.WriteString(fmt.Sprintf("SDVN:\n%s\n\n", result.SDVNOutput))
+	output.WriteString(fmt.Sprintf("Slab:\n%s\n", result.SlabOutput))
+	if result.Error != "" {
+		output.WriteString(fmt.Sprintf("\nError:%s\n", result.SlabOutput))
+	}
+
 	// Store result for this schedule (even if manually canceled)
 	app.scheduleMutex.Lock()
 	app.scheduleResults[scheduleID] = &ScheduleResult{
-		Output:  result.SchedulerOutput + "\n\n" + result.SDVNOutput + "\n" + result.Error,
+		Output:  output.String(),
 		RunType: Scheduled,
 	}
 	app.schedules[scheduleID].IsPast = true
