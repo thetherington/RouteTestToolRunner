@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	"golang.org/x/crypto/ssh"
@@ -16,6 +17,83 @@ type SSHJobTarget struct {
 	User     string
 	Pass     string
 	Commands []string
+	Command  string
+}
+
+// SSHPersistentHandle represents a long-lived remote SSH command/process.
+type SSHPersistentHandle struct {
+	Session    *ssh.Session
+	Connection *ssh.Client
+	Label      string // for activity/status/reporting, e.g., "scheduler"
+	Cmd        string
+	once       sync.Once
+	closed     bool
+}
+
+// Close terminates the remote command, closes the session and SSH connection.
+// It is safe to call Close multiple times.
+func (h *SSHPersistentHandle) Close() error {
+	var err error
+
+	h.once.Do(func() {
+		h.closed = true
+		if h.Session != nil {
+			_ = h.Session.Signal(ssh.SIGKILL)
+			_ = h.Session.Close()
+		}
+		if h.Connection != nil {
+			_ = h.Connection.Close()
+		}
+	})
+
+	return err // always returns nil for now; can be extended to aggregate errors
+}
+
+// sshRunPersistentCmd establishes an SSH connection to the given host, starts the command (non-blocking),
+// and returns a handle that allows the caller to Close() when finished.
+// Stdout and Stderr should be attached as needed (may be the caller's responsibility for real streaming).
+// Activity status is updated before/after all major phases.
+// Errors on connect or start prevent the handle from being returned.
+func sshRunPersistentCmd(ctx context.Context, app *App, target SSHJobTarget) (*SSHPersistentHandle, error) {
+	app.SetJobActivity(fmt.Sprintf("Connecting to %s (%s) via SSH (persistent)...", target.Label, target.IP))
+	config := &ssh.ClientConfig{
+		User: target.User,
+		Auth: []ssh.AuthMethod{
+			ssh.Password(target.Pass),
+		},
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+		Timeout:         10 * time.Second,
+	}
+	conn, err := ssh.Dial("tcp", fmt.Sprintf("%s:22", target.IP), config)
+	if err != nil {
+		return nil, fmt.Errorf("SSH connect failed: %w", err)
+	}
+
+	app.SetJobActivity(fmt.Sprintf("Starting persistent command on %s (%s):\n%s", target.Label, target.IP, target.Command))
+	session, err := conn.NewSession()
+	if err != nil {
+		conn.Close()
+		return nil, fmt.Errorf("session create failed: %w", err)
+	}
+
+	// The caller should optionally set up Stdout, Stderr, Stdin here if needed (streaming etc)
+	// session.Stdout = ...
+	// session.Stderr = ...
+
+	err = session.Start(target.Command)
+	if err != nil {
+		session.Close()
+		conn.Close()
+		return nil, fmt.Errorf("failed to start persistent remote command: %w", err)
+	}
+
+	// The caller must call handle.Close() to release resources and kill the remote process/session.
+	return &SSHPersistentHandle{
+		Session:    session,
+		Connection: conn,
+		Label:      target.Label,
+		Cmd:        target.Command,
+	}, nil
 }
 
 // sshRunCmd executes one or more shell commands on a remote host via SSH,
@@ -150,6 +228,10 @@ func (app *App) StopJob() error {
 
 	if !app.running {
 		return fmt.Errorf("no job running")
+	}
+
+	if app.persistentHandle != nil {
+		go app.persistentHandle.Close() // Gracefully stops persistent SSH command
 	}
 
 	if app.activeSession != nil {
