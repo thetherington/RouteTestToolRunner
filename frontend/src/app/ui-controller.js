@@ -1,3 +1,11 @@
+const STEPS = [
+    { key: "Starting log tailing", label: "Start Log" },
+    { key: "Connecting to scheduler", label: "Scheduler" },
+    { key: "Shutting down SDVN log tailing", label: "Stop Log" },
+    { key: "Scheduler", label: "SDVN" },
+    { key: "Preparing to run local script", label: "Slab" },
+];
+
 export class UIController {
     constructor(dom) {
         this.dom = dom;
@@ -138,7 +146,10 @@ export class UIController {
         this.dom.errorDiv.hidden = true;
     }
 
-    // Call this to display any error in the form
+    /**
+     * Call this to display any error in the form
+     * @param {string} message
+     */
     showFormError(message) {
         this.dom.errorDiv.innerHTML = `
         <div>${message || "Failed to save schedule. Please try again."}</div> 
@@ -159,5 +170,58 @@ export class UIController {
         };
 
         this.dom.errorDiv.hidden = false;
+    }
+
+    /**
+     * Render the step progress
+     * @param {int} step
+     * @param {boolean} running
+     */
+    renderStepProgress(step, running) {
+        if (!running || window.innerWidth < 900) {
+            this.dom.stepProgressContainer.hidden = true;
+            return;
+        }
+
+        this.dom.stepProgressContainer.hidden = false;
+
+        let currentStep = step;
+
+        const stepProgressBar = document.createElement("div");
+        stepProgressBar.classList.add("step-progress-bar");
+
+        STEPS.forEach((step, i) => {
+            let statusClass = "";
+
+            if (i < currentStep) statusClass = "completed";
+            else if (i === currentStep) statusClass = "current";
+
+            stepProgressBar.innerHTML += `
+                <div class="step ${statusClass}">
+                    <span class="circle" data-step=${i}>${i + 1}</span>
+                    <span class="label">${step.label}</span>
+                </div>
+            `;
+        });
+
+        this.dom.stepProgressContainer.replaceChildren(stepProgressBar);
+    }
+
+    clearStepProgress() {
+        while (this.dom.stepProgressContainer.firstChild) {
+            this.dom.stepProgressContainer.removeChild(
+                this.dom.stepProgressContainer.firstChild
+            );
+        }
+    }
+
+    /**
+     * Marks a step with the error class
+     * @param {int} step
+     */
+    markStepInError(step) {
+        this.dom.stepProgressContainer
+            .querySelector(`[data-step="${step}"]`)
+            .classList.add("error");
     }
 }

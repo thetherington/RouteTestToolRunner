@@ -23,5 +23,6 @@ export function getDom() {
         cancelEditBtn: document.getElementById("cancelEditBtn"),
         badge: document.getElementById("outputBadge"),
         errorDiv: document.getElementById("scheduleFormError"),
+        stepProgressContainer: document.getElementById("stepProgressContainer"),
     };
 }

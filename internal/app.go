@@ -22,6 +22,7 @@ type JobResult struct {
 	SDVNOutput      string
 	SlabOutput      string
 	Error           string
+	Step            Step
 	Running         bool
 	RunType         RunType
 }
@@ -34,6 +35,7 @@ type App struct {
 	running     bool
 	lastResult  JobResult
 	jobActivity string
+	step        Step
 	mutex       sync.Mutex
 
 	// Job-cancellation support:
@@ -87,8 +89,11 @@ func NewApp(config *AppConfig) (*App, error) {
 }
 
 // Application main tasks to be performed (Run or Scheduled)
-// - Connect SSH to Magnum Scheduler and execute the scheduler script
-// - Connect SSH to Magnum SDVN and execute the script to analyze the route logs
+// 1 - Connect SSH to Magnum SDVN and start log tailing
+// 2 - Connect SSH to Magnum Scheduler and execute the scheduler script
+// 3 - Stop the log tailing on SDVN and close the connection
+// 4 - Connect SSH to Magnum SDVN and execute the script to analyze the route logs
+// 5 - Execute local script to collect the slab logs
 func (app *App) ExecuteRunnerTasks(ctx context.Context, runType RunType) JobResult {
 	result := JobResult{Running: false, RunType: runType}
 
@@ -105,7 +110,7 @@ func (app *App) ExecuteRunnerTasks(ctx context.Context, runType RunType) JobResu
 	var err error
 
 	// ------- Step 1: Tail log files on magnum
-	app.SetJobActivity("Starting log tailing")
+	app.SetJobActivity("Starting log tailing", step.one)
 	sdvnTarget := SSHJobTarget{
 		Label:    "sdvn",
 		IP:       app.Config.File.Sdvn.IP,
@@ -123,7 +128,7 @@ func (app *App) ExecuteRunnerTasks(ctx context.Context, runType RunType) JobResu
 	app.SetPersistentHandle(logTail)
 
 	// ------- Step 2: Connecting to scheduler
-	app.SetJobActivity("Preparing to connect to scheduler")
+	app.SetJobActivity("Preparing to connect to scheduler", step.two)
 	schedTarget := SSHJobTarget{
 		Label:    "scheduler",
 		IP:       app.Config.File.Scheduler.IP,
@@ -138,11 +143,11 @@ func (app *App) ExecuteRunnerTasks(ctx context.Context, runType RunType) JobResu
 	}
 
 	// ------- Step 3: Shutdown the log tailing
-	app.SetJobActivity("Shutting down SDVN log tailing")
+	app.SetJobActivity("Shutting down SDVN log tailing", step.three)
 	logTail.Close()
 
 	// ------- Step 4: Connecting to sdvn
-	app.SetJobActivity("Preparing to connect to sdvn")
+	app.SetJobActivity("Preparing to connect to sdvn", step.four)
 	result.SDVNOutput, err = sshRunCmd(ctx, app, sdvnTarget)
 	if err != nil {
 		checkErr(err, "SDVN script", result.SDVNOutput)
@@ -150,7 +155,7 @@ func (app *App) ExecuteRunnerTasks(ctx context.Context, runType RunType) JobResu
 	}
 
 	// ------- Step 5: Run local script for Slab logs
-	app.SetJobActivity("Preparing to run local script")
+	app.SetJobActivity("Preparing to run local script", step.five)
 	localTarget := LocalJobTarget{
 		Label:    "slab",
 		Commands: app.Config.File.Slab.Commands,
@@ -160,6 +165,8 @@ func (app *App) ExecuteRunnerTasks(ctx context.Context, runType RunType) JobResu
 		checkErr(err, "Slab script", result.SlabOutput)
 		return result
 	}
+
+	app.SetJobActivity("Completed", step.complete)
 
 	return result
 }
@@ -182,6 +189,7 @@ func (app *App) GetLastResult() JobResult {
 
 	result := app.lastResult
 	result.Running = app.running
+	result.Step = app.step
 
 	return result
 }
@@ -194,11 +202,15 @@ func (app *App) SetLastResult(res JobResult) {
 	app.lastResult = res
 }
 
-func (app *App) SetJobActivity(desc string) {
+func (app *App) SetJobActivity(desc string, step ...Step) {
 	app.mutex.Lock()
 
 	slog.Info(strings.ReplaceAll(desc, "\n", ""))
 	app.jobActivity = desc
+
+	if len(step) > 0 {
+		app.step = step[0]
+	}
 
 	app.mutex.Unlock()
 }

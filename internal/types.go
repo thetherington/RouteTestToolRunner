@@ -24,3 +24,25 @@ func (rt RunType) String() string {
 func (rt RunType) MarshalJSON() ([]byte, error) {
 	return json.Marshal(runTypeName[rt])
 }
+
+type Step int
+
+const (
+	One Step = iota
+	Two
+	Three
+	Four
+	Five
+	Six
+)
+
+type Steps struct {
+	one      Step
+	two      Step
+	three    Step
+	four     Step
+	five     Step
+	complete Step
+}
+
+var step Steps = Steps{One, Two, Three, Four, Five, Six}
