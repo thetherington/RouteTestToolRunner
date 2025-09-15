@@ -37,8 +37,9 @@ type App struct {
 	mutex       sync.Mutex
 
 	// Job-cancellation support:
-	jobCancel     context.CancelFunc
-	activeSession *ssh.Session
+	jobCancel        context.CancelFunc
+	activeSession    *ssh.Session
+	persistentHandle *SSHPersistentHandle // for new persistent background SSH jobs
 
 	// Schedule
 	scheduler       gocron.Scheduler           // global scheduler instance
@@ -103,7 +104,25 @@ func (app *App) ExecuteRunnerTasks(ctx context.Context, runType RunType) JobResu
 
 	var err error
 
-	// ------- Step 1: Connecting to scheduler
+	// ------- Step 1: Tail log files on magnum
+	app.SetJobActivity("Starting log tailing")
+	sdvnTarget := SSHJobTarget{
+		Label:    "sdvn",
+		IP:       app.Config.File.Sdvn.IP,
+		User:     app.Config.SdvnSSH.User,
+		Pass:     app.Config.SdvnSSH.Pass,
+		Command:  app.Config.File.Sdvn.BackgroundCmd,
+		Commands: app.Config.File.Sdvn.Commands,
+	}
+	logTail, err := sshRunPersistentCmd(ctx, app, sdvnTarget)
+	if err != nil {
+		checkErr(err, "Background log tail", "")
+		return result
+	}
+	defer logTail.Close()
+	app.SetPersistentHandle(logTail)
+
+	// ------- Step 2: Connecting to scheduler
 	app.SetJobActivity("Preparing to connect to scheduler")
 	schedTarget := SSHJobTarget{
 		Label:    "scheduler",
@@ -118,22 +137,19 @@ func (app *App) ExecuteRunnerTasks(ctx context.Context, runType RunType) JobResu
 		return result
 	}
 
-	// ------- Step 2: Connecting to sdvn
+	// ------- Step 3: Shutdown the log tailing
+	app.SetJobActivity("Shutting down SDVN log tailing")
+	logTail.Close()
+
+	// ------- Step 4: Connecting to sdvn
 	app.SetJobActivity("Preparing to connect to sdvn")
-	sdvnTarget := SSHJobTarget{
-		Label:    "sdvn",
-		IP:       app.Config.File.Sdvn.IP,
-		User:     app.Config.SdvnSSH.User,
-		Pass:     app.Config.SdvnSSH.Pass,
-		Commands: app.Config.File.Sdvn.Commands,
-	}
 	result.SDVNOutput, err = sshRunCmd(ctx, app, sdvnTarget)
 	if err != nil {
 		checkErr(err, "SDVN script", result.SDVNOutput)
 		return result
 	}
 
-	// ------- Step 3: Run local script for Slab logs
+	// ------- Step 5: Run local script for Slab logs
 	app.SetJobActivity("Preparing to run local script")
 	localTarget := LocalJobTarget{
 		Label:    "slab",
@@ -154,6 +170,7 @@ func (app *App) ResetApp() {
 	app.running = false
 	app.jobCancel = nil
 	app.activeSession = nil
+	app.persistentHandle = nil
 	app.jobActivity = "Idle"
 	app.mutex.Unlock()
 }
@@ -183,5 +200,17 @@ func (app *App) SetJobActivity(desc string) {
 	slog.Info(strings.ReplaceAll(desc, "\n", ""))
 	app.jobActivity = desc
 
+	app.mutex.Unlock()
+}
+
+func (app *App) SetPersistentHandle(h *SSHPersistentHandle) {
+	app.mutex.Lock()
+	app.persistentHandle = h
+	app.mutex.Unlock()
+}
+
+func (app *App) ClearPersistentHandle() {
+	app.mutex.Lock()
+	app.persistentHandle = nil
 	app.mutex.Unlock()
 }
