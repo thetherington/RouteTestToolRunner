@@ -65,11 +65,13 @@ func RegisterJobHandlers(r chi.Router, app *App) {
 		app.mutex.Lock()
 		running := app.running
 		activity := app.jobActivity
+		step := app.step
 		app.mutex.Unlock()
 
 		WriteJSON(w, http.StatusOK, map[string]any{
 			"running":  running,
 			"activity": activity,
+			"step":     step,
 		})
 	})
 

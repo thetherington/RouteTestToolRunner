@@ -175,7 +175,7 @@ class SlabLogSearch:
 
     def print(self) -> None:
         """print logs to the console"""
-
+        time.sleep(5)
         for log in self.logs:
             print(log)
 

@@ -1,0 +1,99 @@
+.step-progress-container {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    // margin-top: 0.95em;
+    // margin-bottom: 1em;
+    min-height: 3.5em;
+    user-select: none;
+    z-index: 1100;
+    position: relative;
+
+    @media (max-width: 900px) {
+        display: none;
+    }
+
+    .step-progress-bar {
+        display: flex;
+        align-items: center;
+        gap: 1.85em; // Gap between steps
+
+        .step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            min-width: 4em;
+
+            .circle {
+                width: 1.5em;
+                height: 1.5em;
+                margin-bottom: 12px;
+                border-radius: 50%;
+                background: #23273a;
+                border: 2.1px solid #373d4e;
+                transition: background 0.19s, border 0.19s;
+                box-shadow: 0 1px 6px 0 #0e101580;
+                color: #c0daff;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: 620;
+                font-size: 1.03em;
+            }
+
+            &.completed .circle {
+                background: var(--color-accent-main);
+                border-color: var(--color-accent-main);
+                color: #141927;
+            }
+
+            &.current .circle {
+                background: var(--color-accent-green);
+                border-color: var(--color-accent-green);
+                color: #081a13;
+            }
+
+            &.current .circle.error {
+                background: var(--color-accent-magenta);
+                border-color: var(--color-accent-magenta);
+                color: #ffffff;
+            }
+
+            .label {
+                font-size: 0.91em;
+                font-weight: 500;
+                color: #94b1ec;
+                white-space: nowrap;
+                letter-spacing: 0.02em;
+                text-shadow: 0 1px 5px #10142077;
+            }
+
+            // Connectors: draw a bar to next step (except the last)
+            &::after {
+                content: '';
+                position: absolute;
+                top: 0.7em; // vertically center
+                left: 60%;
+                width: 5.1em;
+                height: 0.33em;
+                background: #294268;
+                border-radius: 0.19em;
+                transition: background 0.2s;
+                z-index: -1;
+            }
+
+            &.completed::after {
+                background: var(--color-accent-main);
+            }
+
+            &.completed:has(+ .current>.circle.error)::after {
+                background: var(--color-accent-magenta);
+            }
+
+            &:last-child::after {
+                display: none;
+            }
+        }
+    }
+}

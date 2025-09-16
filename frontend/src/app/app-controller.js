@@ -43,6 +43,9 @@ export class AppController {
             return;
         }
 
+        this.ui.clearStepProgress();
+        this.ui.renderStepProgress(0, true);
+
         this.dom.status.textContent = "Status: Starting job...";
         this.ui.setOutputResult("", null);
         this.ui.setButtonState(true);
@@ -62,8 +65,10 @@ export class AppController {
      * Called when the fetchResultBtn is clicked to get the last results
      */
     async fetchLastResult() {
+        this.ui.clearStepProgress();
+
         const data = await api.fetchJobResult();
-        console.log(data);
+
         try {
             // Compose output just like the main poll logic
             this.ui.setOutputResult(this.ui.formatOutput(data), data.RunType);
@@ -167,6 +172,9 @@ export class AppController {
         } else {
             this.dom.status.textContent = "Status: Job finished.";
 
+            // complete the step progress
+            this.ui.renderStepProgress(data.Step, true);
+
             this.ui.setOutputResult(this.ui.formatOutput(data), data.RunType);
 
             this.ui.setButtonState(false);
@@ -174,6 +182,7 @@ export class AppController {
 
             // Show green toast if no error, red if any error in job result
             if (data.Error && data.Error.length > 0) {
+                this.ui.markStepInError(data.Step);
                 this.ui.showToast("Job finished with ERROR!", "error");
             } else {
                 this.ui.showToast("Job completed successfully.", "success");
@@ -191,6 +200,8 @@ export class AppController {
      */
     async updateStatus() {
         const status = await api.fetchJobStatus();
+
+        this.ui.renderStepProgress(status.step, status.running);
 
         if (status.running) {
             this.dom.status.textContent = `Status: Job is running...\n${
