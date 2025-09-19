@@ -3,10 +3,9 @@
 import argparse
 import json
 import sys
-import time
 import urllib
 import urllib.parse
-from typing import Dict, List, Literal, NotRequired, Self, TypedDict, Union, Unpack
+from typing import Any, Dict, List, Literal, NotRequired, TypedDict, Union, Unpack
 
 import requests
 
@@ -20,12 +19,19 @@ class ErrorMissingLogs(Exception):
     """Exception for no logs founds"""
 
 
+class RouterMapEntry(TypedDict):
+    """Router map entry"""
+
+    eng: str
+    dst: int
+    slabs: List[str]
+
+
 class SlabLogSearchParams(TypedDict):
     """SlabLogSearch initialization parameters"""
 
-    slab: NotRequired[str]
-    dst: NotRequired[str]
-    mcast: NotRequired[str]
+    map: Dict[str, RouterMapEntry]
+    mcast: str
     analytics_address: NotRequired[str]
 
 
@@ -66,10 +72,8 @@ class SlabLogSearch:
     """Class to search for logs and print to the console"""
 
     def __init__(self, **kwargs: Unpack[SlabLogSearchParams]) -> None:
-        self.logs = []
-        self.slab = "iad1bc-slab001"
-        self.dst = "1"
-        self.mcast = "239.0.0.1"
+        self.mcast: str = ""
+        self.router_map: Dict[str, RouterMapEntry] = {}
 
         analytics_address = "127.0.0.1"
         analytics_port = 9200
@@ -78,14 +82,12 @@ class SlabLogSearch:
         index = "<log-syslog-error-{now/d}>,<log-syslog-error-{now/d-1d}>"
 
         for key, value in kwargs.items():
-            if "slab" in key and value:
-                self.slab = value
+            if key == "map":
+                if isinstance(value, dict):
+                    self.router_map = value
 
-            if "dst" in key and value:
-                self.dst = value
-
-            if "mcast" in key and value:
-                self.mcast = value
+            if key == "mcast":
+                self.mcast = str(value)
 
             if "analytics" in key and value:
                 analytics_address = value
@@ -98,12 +100,10 @@ class SlabLogSearch:
             f'{analytics_url}/{urllib.parse.quote(index, safe="")}/_search'
         )
 
-        self.search_query = {}
-
-    def query(self) -> Self:
+    def query(self, slab: str, dst: int, mcast: str) -> Dict[str, Any]:
         """query used to find the slab logs"""
 
-        self.search_query = {
+        search_query = {
             "size": 10000,
             "query": {
                 "bool": {
@@ -114,21 +114,21 @@ class SlabLogSearch:
                                     {
                                         "multi_match": {
                                             "type": "best_fields",
-                                            "query": "LwrpUpdated",
+                                            "query": "exnmos",
                                             "lenient": True,
                                         }
                                     },
                                     {
                                         "multi_match": {
                                             "type": "phrase",
-                                            "query": f"DST {self.dst}",
+                                            "query": f"LWRP_DST_{dst}",
                                             "lenient": True,
                                         }
                                     },
                                     {
                                         "multi_match": {
                                             "type": "phrase",
-                                            "query": self.mcast,
+                                            "query": mcast,
                                             "lenient": True,
                                         }
                                     },
@@ -136,16 +136,16 @@ class SlabLogSearch:
                             }
                         },
                         {"range": {"@timestamp": {"from": "now-5m", "to": "now"}}},
-                        {"match_phrase": {"annotation.general.device_name": self.slab}},
+                        {"match_phrase": {"annotation.general.device_name": slab}},
                     ]
                 }
             },
             "_source": ["log.syslog.message"],
         }
 
-        return self
+        return search_query
 
-    def fetch(self) -> Self:
+    def fetch(self, query: Dict[str, Any]) -> List[str]:
         """fetches logs from elasticsearch via the rest api query"""
 
         headers = {"Content-Type": "application/json"}
@@ -155,7 +155,7 @@ class SlabLogSearch:
             self.search_url,
             headers=headers,
             params=params,
-            data=json.dumps(self.search_query),
+            data=json.dumps(query),
             timeout=30.0,
         )
         resp.close()
@@ -169,26 +169,54 @@ class SlabLogSearch:
         for doc in response["hits"]["hits"]:
             logs.append(doc["_source"]["log"]["syslog"]["message"])
 
-        self.logs = logs
-
-        return self
+        return logs
 
     def print(self) -> None:
         """print logs to the console"""
-        time.sleep(5)
-        for log in self.logs:
-            print(log)
+        missing_logs = 0
+        print(f"\nSource DCZA026A (multicast: {self.mcast}):")
+
+        for dst in self.router_map:
+            entry = self.router_map[dst]
+
+            eng = entry["eng"]
+            output = entry["dst"]
+
+            print(f"\nDestination {dst} (eng: {eng}):")
+
+            for slab in entry["slabs"]:
+                print(f"\tSlab Logs for {slab} (DST: {output}):")
+
+                try:
+                    for log in self.fetch(
+                        self.query(slab=slab, dst=output, mcast=self.mcast)
+                    ):
+                        print(f"\t\t{log}")
+
+                except ErrorMissingLogs as exc:
+                    print(f"\t\tError: {exc}")
+                    missing_logs += 1
+                    continue
+
+        print("\n\n")
+        if missing_logs > 0:
+            raise ErrorMissingLogs(f"Total slabs missing logs: {missing_logs}")
 
 
-def dummy_out():
-    """Set delay between lines in seconds (adjust as needed)"""
-    delay_seconds = 2
+def load_router_map(file_path: str) -> Dict[str, Any]:
+    """Load the router map from a JSON file."""
+    try:
+        with open(file_path, "r", encoding="utf-8") as file:
+            router_map = json.load(file)
 
-    lines = ["1", "-----", "2", "3", "4", "5", "6", "7"]
+        return router_map
 
-    for line in lines:
-        print(line)
-        time.sleep(delay_seconds)
+    except FileNotFoundError:
+        print(f"Error: The file {file_path} was not found.")
+        sys.exit(1)
+    except json.JSONDecodeError:
+        print(f"Error: The file {file_path} is not a valid JSON file.")
+        sys.exit(1)
 
 
 def main() -> None:
@@ -197,31 +225,21 @@ def main() -> None:
     args_parser = argparse.ArgumentParser(description="Telos Slab Log Searcher")
 
     args_parser.add_argument(
-        "-slab",
-        "--slab-name",
-        required=False,
+        "-map",
+        "--router-map",
+        required=True,
         type=str,
-        metavar="<iad1bc-slab001>",
-        default="iad1bc-slab001",
-        help="Slab device name",
-    )
-    args_parser.add_argument(
-        "-dst",
-        "--slab-output",
-        required=False,
-        type=str,
-        metavar="<1>",
-        default="1",
-        help="Slab Output",
+        metavar="<routermap.json>",
+        default="routermap.json",
+        help="Router Map JSON file",
     )
     args_parser.add_argument(
         "-mcast",
-        "--multicast",
-        required=False,
+        "--ip-mcast-source",
+        required=True,
         type=str,
-        metavar="<239.0.0.1>",
-        default="239.0.0.1",
-        help="Multicast address",
+        metavar="<239.1.1.1>",
+        help="IP Multicast Source",
     )
     args_parser.add_argument(
         "-insite",
@@ -236,13 +254,12 @@ def main() -> None:
     args = args_parser.parse_args()
 
     params: SlabLogSearchParams = {
-        "slab": args.slab_name,
-        "dst": args.slab_output,
-        "mcast": args.multicast,
+        "mcast": args.ip_mcast_source,
+        "map": load_router_map(args.router_map),
         "analytics_address": args.analytics_ip,
     }
 
-    SlabLogSearch(**params).query().fetch().print()
+    SlabLogSearch(**params).print()
 
 
 if __name__ == "__main__":

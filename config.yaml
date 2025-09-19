@@ -16,5 +16,5 @@ sdvn:
 
 slab:
   commands: 
-    - "python3 slab_logs_script.py -slab iad1bc-slab017 -dst 6 -mcast 239.10.64.203 -insite 10.9.0.69"
+    - "python3 slab_logs_script.py -map routermap.json -mcast 239.131.1.161 -insite 10.9.0.69"
     - "echo Done with slab"
