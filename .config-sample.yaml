@@ -1,0 +1,20 @@
+scheduler:
+  ip: "10.9.0.69"
+  commands: 
+    - "date"
+    - "/home/etdev/Report_Script/sxm_profile_w_encryption_v1_4.py"
+    - "echo Done with scheduler"
+
+sdvn:
+  ip: "10.9.0.69"
+  background: > 
+      tail -n 0 -f /var/log/magrtrsrv.log > sxm_router.txt & 
+      tail -n 0 -f /var/log/magclientsrv.log > sxm_client.txt
+  commands: 
+    - "python3 route_speed_from_logs_v2.py -syslog={SYSLOG_HOST} sxm_router.txt 0 --check-magclient-requests sxm_client.txt"
+    - "echo Done with sdvn"
+
+slab:
+  commands: 
+    - "python3 slab_logs_script.py -map routermap.json -mcast 239.131.1.161 -insite 10.9.0.69"
+    - "echo Done with slab"
