@@ -16,9 +16,10 @@ export class ScheduleController {
 
         this.flatpickr = flatpickr(this.pickerInput, {
             enableTime: true,
+            enableSeconds: true,
             dateFormat: "Z",
             altInput: true,
-            altFormat: "Y-m-d h:i K",
+            altFormat: "Y-m-d h:i:S K",
             minDate: "today",
             // Use onChange to trigger button enable/disable
             onChange: this.handlePickerChange.bind(this),
@@ -97,7 +98,7 @@ export class ScheduleController {
                 </div>
             </div>
             <div class="schedule-actions">
-                <button class="btn-sm btn--icon btn--primary" title="Run report" aria-label="View report">
+                <button class="btn-sm btn--icon btn--primary" title="View report" aria-label="View report">
                     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="#ffffff">
                         <g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> 
                             <path d="M17 17H17.01M17.4 14H18C18.9319 14 19.3978 14 19.7654 14.1522C20.2554 14.3552 20.6448 14.7446 20.8478 15.2346C21 15.6022 21 16.0681 21 17C21 17.9319 21 18.3978 20.8478 18.7654C20.6448 19.2554 20.2554 19.6448 19.7654 19.8478C19.3978 20 18.9319 20 18 20H6C5.06812 20 4.60218 20 4.23463 19.8478C3.74458 19.6448 3.35523 19.2554 3.15224 18.7654C3 18.3978 3 17.9319 3 17C3 16.0681 3 15.6022 3.15224 15.2346C3.35523 14.7446 3.74458 14.3552 4.23463 14.1522C4.60218 14 5.06812 14 6 14H6.6M12 15V4M12 15L9 12M12 15L15 12" stroke="#ffffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -105,7 +106,7 @@ export class ScheduleController {
                         </g>
                     </svg>
                 </button>
-                <button class="btn-sm btn--icon btn--success" title="Edit" aria-label="Edit">
+                <button class="btn-sm btn--icon btn--success" title="Edit Schedule" aria-label="Edit">
                     <svg viewBox="0 0 24 24" id="_24x24_On_Light_Edit" data-name="24x24/On Light/Edit" xmlns="http://www.w3.org/2000/svg" fill="#000000">
                         <g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round">
                         </g>
@@ -115,7 +116,7 @@ export class ScheduleController {
                         </g>
                     </svg>
                 </button>
-                <button class="btn-sm btn--icon btn--danger" title="Delete" aria-label="Delete">
+                <button class="btn-sm btn--icon btn--danger" title="Delete Schedule" aria-label="Delete">
                     <svg width="128" height="128" viewBox="0 0 28 28" aria-hidden="true"
                         focusable="false">
                         <line x1="8" y1="8" x2="20" y2="20" stroke="currentColor"
