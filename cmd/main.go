@@ -7,7 +7,6 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
-	"time"
 
 	"github.com/lmittmann/tint"
 	"github.com/thetherington/RouteTestTool/internal"
@@ -38,7 +37,7 @@ func main() {
 	slog.SetDefault(slog.New(
 		tint.NewHandler(os.Stderr, &tint.Options{
 			Level:      slog.LevelDebug,
-			TimeFormat: time.Kitchen,
+			TimeFormat: "3:04:05PM",
 		}),
 	))
 
