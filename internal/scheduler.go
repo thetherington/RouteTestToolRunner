@@ -11,11 +11,12 @@ import (
 )
 
 type Schedule struct {
-	ID        string    `json:"id"`
-	Time      time.Time `json:"time"`
-	IsPast    bool      `json:"isPast,omitempty"`
-	HasError  bool      `json:"hasError"`
-	IsRunning bool      `json:"isRunning"`
+	ID         string     `json:"id"`
+	Time       time.Time  `json:"time"`
+	IsPast     bool       `json:"isPast,omitempty"`
+	HasError   bool       `json:"hasError"`
+	IsRunning  bool       `json:"isRunning"`
+	FileConfig FileConfig `json:"-"`
 }
 
 type ScheduleResult struct {
@@ -60,9 +61,9 @@ func (app *App) AddScheduledJob(sched *Schedule) error {
 
 	// Defensive: ensure future time; in real app, also check that time is not past
 	job, err := app.scheduler.NewJob(
-		gocron.OneTimeJob(gocron.OneTimeJobStartDateTime(sched.Time)),
+		gocron.OneTimeJob(gocron.OneTimeJobStartDateTime(sched.Time.Add(-time.Minute))),
 		gocron.NewTask(func() {
-			app.runScheduledJob(sched.ID)
+			app.runScheduledJob(sched)
 		}),
 	)
 	if err != nil {
@@ -75,8 +76,8 @@ func (app *App) AddScheduledJob(sched *Schedule) error {
 }
 
 // Called by gocron callback for this schedule
-func (app *App) runScheduledJob(scheduleID string) {
-	slog.Info("Running Job Schedule", "id", scheduleID)
+func (app *App) runScheduledJob(sched *Schedule) {
+	slog.Info("Running Job Schedule", "id", sched.ID)
 
 	// Acquire lock for one-job-at-a-time
 	app.mutex.Lock()
@@ -85,12 +86,12 @@ func (app *App) runScheduledJob(scheduleID string) {
 
 		// Optionally: record that the job was skipped due to a conflict
 		app.scheduleMutex.Lock()
-		app.scheduleResults[scheduleID] = &ScheduleResult{Output: "Job skipped: another job was already running.\n\n", RunType: Scheduled}
-		app.schedules[scheduleID].IsPast = true
-		app.schedules[scheduleID].HasError = true
+		app.scheduleResults[sched.ID] = &ScheduleResult{Output: "Job skipped: another job was already running.\n\n", RunType: Scheduled}
+		app.schedules[sched.ID].IsPast = true
+		app.schedules[sched.ID].HasError = true
 		app.scheduleMutex.Unlock()
 
-		slog.Error("Schedule Job skipped another job was already running", "id", scheduleID)
+		slog.Error("Schedule Job skipped another job was already running", "id", sched.ID)
 		return
 	}
 
@@ -102,13 +103,13 @@ func (app *App) runScheduledJob(scheduleID string) {
 	// defer resetting of the app state
 	defer func() {
 		app.ResetApp()
-		app.schedules[scheduleID].IsRunning = false
+		app.schedules[sched.ID].IsRunning = false
 	}()
 
-	app.schedules[scheduleID].IsRunning = true
+	app.schedules[sched.ID].IsRunning = true
 
 	// ---- Execute the Tasks
-	result := app.ExecuteRunnerTasks(ctx, Scheduled)
+	result := app.ExecuteRunnerTasks(ctx, Scheduled, sched.FileConfig)
 
 	var output strings.Builder
 
@@ -121,12 +122,12 @@ func (app *App) runScheduledJob(scheduleID string) {
 
 	// Store result for this schedule (even if manually canceled)
 	app.scheduleMutex.Lock()
-	app.scheduleResults[scheduleID] = &ScheduleResult{
+	app.scheduleResults[sched.ID] = &ScheduleResult{
 		Output:  output.String(),
 		RunType: Scheduled,
 	}
-	app.schedules[scheduleID].IsPast = true
-	app.schedules[scheduleID].HasError = result.Error != ""
+	app.schedules[sched.ID].IsPast = true
+	app.schedules[sched.ID].HasError = result.Error != ""
 	app.scheduleMutex.Unlock()
 
 	// Set the last result

@@ -94,7 +94,7 @@ func NewApp(config *AppConfig) (*App, error) {
 // 3 - Stop the log tailing on SDVN and close the connection
 // 4 - Connect SSH to Magnum SDVN and execute the script to analyze the route logs
 // 5 - Execute local script to collect the slab logs
-func (app *App) ExecuteRunnerTasks(ctx context.Context, runType RunType) JobResult {
+func (app *App) ExecuteRunnerTasks(ctx context.Context, runType RunType, config ...FileConfig) JobResult {
 	result := JobResult{Running: false, RunType: runType}
 
 	checkErr := func(e error, descr string, output string) {
@@ -107,17 +107,24 @@ func (app *App) ExecuteRunnerTasks(ctx context.Context, runType RunType) JobResu
 		}
 	}
 
+	var cfg FileConfig = app.Config.File
+
+	// use custom config for this run if provided
+	if len(config) > 0 {
+		cfg = config[0]
+	}
+
 	var err error
 
 	// ------- Step 1: Tail log files on magnum
 	app.SetJobActivity("Starting log tailing", step.one)
 	sdvnTarget := SSHJobTarget{
 		Label:    "sdvn",
-		IP:       app.Config.File.Sdvn.IP,
+		IP:       cfg.Sdvn.IP,
 		User:     app.Config.SdvnSSH.User,
 		Pass:     app.Config.SdvnSSH.Pass,
-		Command:  app.Config.File.Sdvn.BackgroundCmd,
-		Commands: app.Config.File.Sdvn.Commands,
+		Command:  cfg.Sdvn.BackgroundCmd,
+		Commands: cfg.Sdvn.Commands,
 	}
 	logTail, err := sshRunPersistentCmd(ctx, app, sdvnTarget)
 	if err != nil {
@@ -131,10 +138,10 @@ func (app *App) ExecuteRunnerTasks(ctx context.Context, runType RunType) JobResu
 	app.SetJobActivity("Preparing to connect to scheduler", step.two)
 	schedTarget := SSHJobTarget{
 		Label:    "scheduler",
-		IP:       app.Config.File.Scheduler.IP,
+		IP:       cfg.Scheduler.IP,
 		User:     app.Config.SchedulerSSH.User,
 		Pass:     app.Config.SchedulerSSH.Pass,
-		Commands: app.Config.File.Scheduler.Commands,
+		Commands: cfg.Scheduler.Commands,
 	}
 	result.SchedulerOutput, err = sshRunCmd(ctx, app, schedTarget)
 	if err != nil {
@@ -158,7 +165,7 @@ func (app *App) ExecuteRunnerTasks(ctx context.Context, runType RunType) JobResu
 	app.SetJobActivity("Preparing to run local script", step.five)
 	localTarget := LocalJobTarget{
 		Label:    "slab",
-		Commands: app.Config.File.Slab.Commands,
+		Commands: cfg.Slab.Commands,
 	}
 	result.SlabOutput, err = localRunCmd(ctx, app, localTarget)
 	if err != nil {

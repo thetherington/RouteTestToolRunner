@@ -26,7 +26,7 @@
         margin-bottom: 1.5em;
     }
 
-    div {
+    .schedule-form-btn-group {
         display: flex;
         gap: 0.8em;
     }
@@ -153,4 +153,72 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+}
+
+.date-picker-with-tooltip {
+    display: flex;
+    align-items: start;
+    gap: 3px
+}
+
+.new-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 4px;
+    height: auto;
+    min-height: 20px;
+    border-radius: 12px;
+    background: #23273a;
+    color: #fff;
+    font-size: 12px;
+    line-height: 1;
+    border: none;
+    cursor: help;
+    position: relative;
+    gap: 6px;
+}
+
+.new-icon svg {
+    width: 12px;
+    height: 12px;
+    display: block;
+    flex: 0 0 auto;
+}
+
+/* Tooltip */
+.tooltip {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%) translateY(6px);
+    background: rgba(34, 34, 34, 0.95);
+    color: #fff;
+    padding: 6px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.12s ease, transform 0.12s ease;
+    z-index: 10;
+}
+
+.tooltip::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 6px;
+    border-style: solid;
+    border-color: rgba(34, 34, 34, 0.95) transparent transparent transparent;
+}
+
+.new-icon:hover .tooltip,
+.new-icon:focus .tooltip,
+.new-icon:focus-within .tooltip {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+    pointer-events: auto;
 }

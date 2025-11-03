@@ -3,6 +3,7 @@ package internal
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"time"
@@ -115,8 +116,22 @@ func RegisterSchedulerHandlers(r chi.Router, app *App) {
 			return
 		}
 
+		// Unique ID for schedule
 		id := uuid.New().String()
-		sched := &Schedule{ID: id, Time: schedTime}
+
+		// Deep copy of current file config for this schedule
+		cfg := app.Config.File.DeepCopy()
+
+		// modify the cli script command to include schedule time argument
+		if len(cfg.Scheduler.Commands) > 1 {
+			// TODO: pass schedule time as either formatted time stamp or unix epoch.
+			// TODO: find the right cli command to accept this argument instead of using the last item in the command list
+			idx := len(cfg.Scheduler.Commands) - 1
+			cfg.Scheduler.Commands[idx] = fmt.Sprintf("%s --schedule-time=%s", cfg.Scheduler.Commands[idx], schedTime.Format(time.RFC3339))
+		}
+
+		// create the schedule object
+		sched := &Schedule{ID: id, Time: schedTime, FileConfig: cfg}
 
 		if err := app.AddScheduledJob(sched); err != nil {
 			slog.Error("failed to create cron task", "error", err)
@@ -155,26 +170,43 @@ func RegisterSchedulerHandlers(r chi.Router, app *App) {
 			return
 		}
 
-		var sched *Schedule
-		var ok bool
+		var (
+			sched *Schedule
+			ok    bool
+		)
 
-		func() {
+		// Get existing schedule and remove the job from the conjob scheduler
+		err = func() error {
 			app.scheduleMutex.Lock()
 			defer app.scheduleMutex.Unlock()
 
 			sched, ok = app.schedules[scheduleID]
 			if !ok {
-				http.Error(w, "not found", http.StatusNotFound)
-				return
+				return fmt.Errorf("schedule not found")
 			}
 
 			// Remove old job, update, add new job
 			if oldJob, has := app.scheduleJobs[scheduleID]; has {
 				app.scheduler.RemoveJob(oldJob.ID())
 			}
+
+			return nil
 		}()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusNotFound)
+		}
 
 		sched.Time = schedTime
+
+		// modify the cli script command to include schedule time argument
+		if len(sched.FileConfig.Scheduler.Commands) > 1 {
+			// TODO: pass schedule time as either formatted time stamp or unix epoch.
+			// TODO: find the right cli command to accept this argument instead of using the last item in the command list
+			idx := len(sched.FileConfig.Scheduler.Commands) - 1
+			sched.FileConfig.Scheduler.Commands[idx] = fmt.Sprintf("%s --schedule-time=%s",
+				app.Config.File.Scheduler.Commands[idx], schedTime.Format(time.RFC3339),
+			)
+		}
 
 		if err := app.AddScheduledJob(sched); err != nil {
 			slog.Error("failed to create cron task", "error", err)
@@ -182,7 +214,7 @@ func RegisterSchedulerHandlers(r chi.Router, app *App) {
 			return
 		}
 
-		WriteJSON(w, http.StatusCreated, sched)
+		WriteJSON(w, http.StatusAccepted, sched)
 	})
 
 	r.Delete("/api/schedules/{id}", func(w http.ResponseWriter, r *http.Request) {

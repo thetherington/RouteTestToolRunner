@@ -3,6 +3,7 @@ package internal
 import (
 	"fmt"
 	"os"
+	"slices"
 
 	"github.com/joho/godotenv"
 	"github.com/spf13/viper"
@@ -27,6 +28,26 @@ type FileConfig struct {
 	Scheduler HostConfig  `mapstructure:"scheduler"`
 	Sdvn      HostConfig  `mapstructure:"sdvn"`
 	Slab      LocalConfig `mapstructure:"slab"`
+}
+
+func (in HostConfig) DeepCopy() HostConfig {
+	out := in
+	out.Commands = slices.Clone(in.Commands)
+	return out
+}
+
+func (in LocalConfig) DeepCopy() LocalConfig {
+	out := in
+	out.Commands = slices.Clone(in.Commands)
+	return out
+}
+
+func (in FileConfig) DeepCopy() FileConfig {
+	return FileConfig{
+		Scheduler: in.Scheduler.DeepCopy(),
+		Sdvn:      in.Sdvn.DeepCopy(),
+		Slab:      in.Slab.DeepCopy(),
+	}
 }
 
 // AppConfig merges .env-based SSH credentials and file config.
