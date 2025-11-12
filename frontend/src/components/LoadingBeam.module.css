@@ -1,0 +1,65 @@
+.loading-beam,
+.loading-beam-card {
+    position: fixed;
+    left: 0;
+    right: 0;
+    height: 4px;
+    z-index: 5001;
+    pointer-events: none;
+    background: none;
+}
+.loading-beam {
+    top: 5em;
+}
+.loading-beam:before,
+.loading-beam-card:before {
+    content: "";
+    display: block;
+    position: absolute;
+    left: -15vw;
+    width: 30vw;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        var(--color-accent-beam1) 0%,
+        var(--color-accent-beam2) 15%,
+        var(--color-accent-beam3) 33%,
+        var(--color-accent-beam2) 62%,
+        var(--color-accent-beam1) 100%
+    );
+    opacity: 0.58;
+    border-radius: 3px;
+    filter: blur(0.5px);
+    animation: beam-move 1.5s linear infinite,
+        beam-pulse 1.3s ease-in-out infinite alternate;
+}
+.loading-beam-card {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+}
+.loading-beam-card[hidden] {
+    display: none !important;
+}
+@keyframes beam-move {
+    0% {
+        left: -15vw;
+    }
+    to {
+        left: 85vw;
+    }
+}
+@keyframes beam-pulse {
+    0% {
+        opacity: 0.35;
+        filter: blur(1.1px);
+    }
+    60% {
+        opacity: 0.74;
+        filter: blur(0.35px);
+    }
+    to {
+        opacity: 0.5;
+        filter: blur(0.7px);
+    }
+}

@@ -1,0 +1,15 @@
+.schedule-divider {
+    border: none;
+    height: 2.1px;
+    margin: 0 0 2em 0;
+    background: linear-gradient(
+        90deg,
+        transparent 6%,
+        #81aaff 30%,
+        #d6577f 60%,
+        transparent 94%
+    );
+    opacity: 0.74;
+    border-radius: 1em;
+    box-shadow: 0 2px 8px 0 #181b2233;
+}

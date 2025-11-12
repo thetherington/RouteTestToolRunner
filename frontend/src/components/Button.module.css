@@ -1,0 +1,216 @@
+.base,
+.md,
+.sm {
+    font-family: Arial, sans-serif;
+    font-size: 1em;
+    font-weight: 600;
+    border-radius: 6px;
+    border: 1px solid #446a9f;
+    color: #fff;
+    background: #213b53;
+    box-shadow: 0 2px 6px #0e101580;
+    padding: 0.42em 1.35em;
+    cursor: pointer;
+    outline: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45em;
+    transition: background 0.15s, border 0.15s, color 0.13s;
+}
+.base:hover,
+.md:hover,
+.sm:hover,
+.base:focus,
+.md:focus,
+.sm:focus {
+    background: #315c8a;
+    border-color: #81aaff;
+    border-color: var(--color-accent-main);
+}
+.disabled,
+.base:disabled,
+.md:disabled,
+.sm:disabled {
+    background: #4e4265 !important;
+    color: #9f8cff !important;
+    border: 2px solid #d6577f !important;
+    cursor: not-allowed;
+    opacity: 1;
+    box-shadow: 0 0 8px #d6577faa;
+    text-shadow: 0 1px 3px rgba(24, 27, 34, 0.8);
+}
+.base[hidden],
+.md[hidden],
+.sm[hidden] {
+    display: none !important;
+}
+.sm {
+    padding: 1px !important;
+    width: 2em;
+    height: 2em;
+}
+.sm svg {
+    width: 1.3em !important;
+    height: 1.3em !important;
+}
+.md {
+    height: 2em;
+}
+.md svg {
+    width: 1.3em !important;
+    height: 1.3em !important;
+}
+.primary {
+    color: #fff;
+    border-color: #446a9f;
+    padding: 10px 30px;
+}
+.primary:hover,
+.primary:focus {
+    color: #fff;
+    border-color: #81aaff;
+}
+.danger {
+    background: #4a1d2c !important;
+    color: #ffd0e0 !important;
+    border-color: #6f2323 !important;
+}
+.danger:hover,
+.danger:focus {
+    background: #5c3f4b !important;
+    color: #fad0d5 !important;
+    border-color: #ff4273 !important;
+}
+.success {
+    background: #234c2a !important;
+    color: #b7f7b2 !important;
+    border-color: #1a822d !important;
+}
+.success:hover,
+.success:focus {
+    background: #19371e;
+    color: #eafedc !important;
+    border-color: #29cf47 !important;
+}
+.edit {
+    background: #716000 !important;
+    color: #f2ff02 !important;
+    border-color: #d9c709 !important;
+}
+.icon {
+    padding: 0.36em 0.9em;
+    justify-content: center;
+    align-items: center;
+    background: #252a36;
+    border-color: #373d4e;
+    color: var(--color-accent-green);
+}
+.icon svg {
+    width: 1.51em;
+    height: 1.51em;
+    display: block;
+    transition: transform 0.38s, color 0.15s;
+}
+.icon:hover,
+.icon:focus {
+    background: #325c6e;
+    color: var(--color-accent-main);
+    border-color: #81aaff;
+}
+.copy {
+    background: #252a36;
+    color: #81aaff;
+    border-color: #373d4e;
+}
+.copy:hover,
+.copy:focus {
+    background: #325c6e;
+    color: #c0daff;
+    border-color: #81aaff;
+}
+.copy:hover svg,
+.copy:focus svg {
+    color: var(--color-clip-btn-hover-text);
+    transform: scale(1.12) rotate(-3deg);
+}
+.save {
+    background: #252a36;
+    color: #79efb6;
+    border-color: #373d4e;
+}
+.save:hover,
+.save:focus {
+    background: #214c33;
+    color: #adf1c1;
+    border-color: #79efb6;
+}
+.save:hover svg,
+.save:focus svg {
+    color: var(--color-save-btn-hover-text);
+    transform: scale(1.12) rotate(3deg);
+}
+
+/* Toggle Switch Styles */
+.toggleSwitch {
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    gap: 0.6em;
+    user-select: none;
+}
+.toggleSwitch-reverse {
+    flex-direction: row-reverse;
+}
+.toggleInput {
+    display: none;
+}
+.toggleSlider {
+    width: 2.2em;
+    height: 1.2em;
+    background: #404249;
+    border-radius: 1em;
+    position: relative;
+    transition: background 0.2s;
+    box-shadow: 0 1px 4px #0e101540;
+    flex-shrink: 0;
+}
+.toggleSlider:before {
+    content: "";
+    position: absolute;
+    left: 0.18em;
+    top: 0.18em;
+    width: 0.85em;
+    height: 0.85em;
+    background: #81aaff;
+    border-radius: 50%;
+    transition: transform 0.22s cubic-bezier(0.55, 1.2, 0.32, 1);
+    box-shadow: 0 1px 2px #0e101540;
+}
+.toggleInput:checked + .toggleSlider {
+    background: #315c8a;
+}
+.toggleInput:checked + .toggleSlider:before {
+    transform: translateX(1em);
+    background: #79efb6;
+}
+.toggleLabel {
+    color: #bcc5de;
+    font-size: 0.95em;
+    font-weight: 500;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+@media (max-width: 600px) {
+    .base,
+    .sm,
+    .md {
+        font-size: 0.89em;
+        padding: 0.37em 1em;
+    }
+    .icon {
+        font-size: 0.82em;
+        width: 1.8em;
+        height: 1.8em;
+    }
+}

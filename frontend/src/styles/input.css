@@ -1,0 +1,91 @@
+.input,
+input[type="text"],
+input[type="search"],
+input[type="password"],
+input[type="email"],
+textarea {
+    font-family: Arial, sans-serif;
+    font-size: 1em;
+    font-weight: 600;
+    border-radius: 6px;
+    border: 1px solid #446a9f;
+    background: #1c2838;
+    color: var(--color-fg);
+    box-shadow: 0 2px 6px #0e101580;
+    padding: 0.42em 1.35em;
+    outline: none;
+    transition: background 0.16s, border 0.13s, color 0.13s, box-shadow 0.13s;
+}
+.input::placeholder,
+input[type="text"]::placeholder,
+input[type="search"]::placeholder,
+input[type="password"]::placeholder,
+input[type="email"]::placeholder,
+textarea::placeholder {
+    color: #b7bdbd;
+    opacity: 0.88;
+    font-weight: 400;
+}
+.input:hover,
+.input:focus,
+input[type="text"]:hover,
+input[type="text"]:focus,
+input[type="search"]:hover,
+input[type="search"]:focus,
+input[type="password"]:hover,
+input[type="password"]:focus,
+input[type="email"]:hover,
+input[type="email"]:focus,
+textarea:hover,
+textarea:focus {
+    background: #213b53;
+    border-color: #81aaff;
+    color: var(--color-fg);
+    box-shadow: 0 3px 12px #81aaff21;
+}
+.input:disabled,
+input[type="text"]:disabled,
+input[type="search"]:disabled,
+input[type="password"]:disabled,
+input[type="email"]:disabled,
+textarea:disabled {
+    background: #4e4265 !important;
+    color: #9f8cff !important;
+    border: 2px solid #d6577f !important;
+    opacity: 1;
+    box-shadow: none;
+    cursor: not-allowed;
+}
+.input--full,
+input[type="text"].input--full,
+textarea.input--full {
+    width: 100%;
+    box-sizing: border-box;
+}
+.input--success {
+    border-color: #1a822d;
+    background: #316b3b;
+}
+.input--success:focus,
+.input--success:hover {
+    border-color: #1a822d;
+}
+.input--danger {
+    border-color: #ff4273;
+    background: #67283d;
+}
+.input--danger:focus,
+.input--danger:hover {
+    border-color: #ff4273;
+}
+@media (max-width: 600px) {
+    .input,
+    input[type="text"],
+    textarea {
+        font-size: 0.95em;
+        padding: 0.35em 0.9em;
+    }
+}
+/* input.flatpickr-input {
+    display: none;
+} */

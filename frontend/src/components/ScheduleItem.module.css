@@ -1,0 +1,54 @@
+.schedule-card {
+    overflow: hidden;
+    background: #23273a;
+    box-shadow: 0 1px 2px 0.5px #0e0f14;
+    border-radius: 8px;
+    padding: 1.02em 1.5em 1.02em 1.3em;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    border: 1.5px solid #303860;
+    transition: border 0.18s;
+    position: relative;
+}
+.schedule-card.past {
+    opacity: 0.66;
+    filter: grayscale(0.4);
+    box-shadow: 0 1px 6px #23273111;
+}
+.schedule-card .schedule-info {
+    flex: 1 1 auto;
+}
+.schedule-card .schedule-info div {
+    display: flex;
+    gap: 10px;
+}
+.schedule-card .schedule-info div span {
+    width: 10px;
+    height: 10px;
+}
+.schedule-card .schedule-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.8em;
+}
+.schedule-card .muted {
+    margin-top: 3px;
+    font-size: 0.9em;
+    font-style: italic;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.schedule-card .muted svg {
+    width: 16px;
+    height: 16px;
+}
+.schedule-card button {
+    font-size: 1em;
+    padding: 0.39em 0.8em;
+    width: 2em !important;
+    height: 2em !important;
+    border-radius: 100%;
+    justify-content: center;
+}
