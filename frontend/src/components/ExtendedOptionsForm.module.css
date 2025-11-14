@@ -6,9 +6,11 @@
 }
 
 .form-section {
+    position: relative;
     display: flex;
     flex-direction: column;
     gap: 0.8em;
+    width: inherit;
 }
 
 .section-header {
@@ -47,6 +49,8 @@
     font-size: 0.95em;
     transition: border-color 0.2s, box-shadow 0.2s;
     font-family: inherit;
+    box-sizing: border-box;
+    width: inherit;
 }
 
 .form-input:focus {
@@ -113,6 +117,46 @@
 .button-group {
     display: flex;
     gap: 0.8em;
+}
+
+.input-wrap {
+    position: relative;
+    width: 100%;
+}
+
+/* overlay positioned at the end of the input, vertically centered */
+.overlay {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    pointer-events: none;
+    white-space: nowrap;
+}
+
+/* muted/italic multicast text */
+.overlay-text {
+    color: #6b7280; /* muted gray */
+    font-size: 0.9rem;
+    font-style: italic;
+}
+
+/* muted/italic multicast text */
+.overlay-text-slab {
+    color: #6b7280; /* muted gray */
+    font-size: 0.7rem;
+    font-style: italic;
+}
+
+/* yellow exclamation-style icon styling */
+.overlay-icon {
+    width: 20px;
+    height: 20px;
+    stroke: #ffc107;
+    fill: none;
 }
 
 @media (max-width: 600px) {
