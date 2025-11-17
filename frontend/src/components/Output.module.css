@@ -1,0 +1,56 @@
+.output-container {
+    position: relative;
+    margin-top: 3em;
+    width: 100%;
+    max-width: 100%;
+}
+.output-container .output-source-badge {
+    display: inline-block;
+    position: absolute;
+    top: -1.59em;
+    left: 50%;
+    transform: translate(-50%);
+    padding: 0.18em 1.15em 0.17em;
+    font-size: 1em;
+    font-weight: 650;
+    border-radius: 1.2em 1.2em 0.14em 0.14em;
+    box-shadow: 0 2px 8px #23273127;
+    border: 1.5px solid #303860;
+    border-bottom: 2px solid #252a36 !important;
+    background: #233357e7;
+    color: #fff;
+    letter-spacing: 0.04em;
+    z-index: 8;
+    -webkit-user-select: none;
+    user-select: none;
+    pointer-events: none;
+    transition: background 0.2s, color 0.16s, border 0.16s;
+}
+.output-container .output-source-badge[hidden] {
+    display: none;
+}
+.output-container .output-source-badge.manual {
+    background: var(--color-accent-pre-bg);
+    color: #b4d2fd;
+    border-color: var(--color-accent-pre-border);
+}
+.output-container .output-source-badge.scheduled {
+    background: var(--color-accent-pre-bg);
+    color: #81aaff;
+    border-color: var(--color-accent-pre-border);
+}
+.output-container .copyBtn,
+.output-container .saveBtn {
+    position: absolute;
+    top: 0.6em;
+    z-index: 2;
+}
+.output-container .copyBtn {
+    right: 5.5em;
+}
+.output-container .saveBtn {
+    right: 1.2em;
+}
+.output-container:has(> .output-source-badge[hidden]) {
+    margin-top: 2em !important;
+}

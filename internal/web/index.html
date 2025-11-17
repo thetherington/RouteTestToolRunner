@@ -1,166 +1,17 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Route Test Tool</title>
-  <script type="module" crossorigin src="/assets/index-MKSlYlX5.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/index-Ds-yMhgn.css">
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Route Test Tool Runner</title>
+  <script type="module" crossorigin src="/assets/index-DT843W1m.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-BI9ya1f3.css">
 </head>
 
 <body>
-  <nav class="navbar">
-    <div class="navbar--group">
-      <button id="menuBtn" class="hamburger" aria-label="Open menu">
-        <!-- Hamburger SVG Icon (three lines, easy to animate) -->
-        <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"
-          focusable="false">
-          <rect class="bar bar1" x="6" y="8" width="16" height="2.2" rx="1"
-            fill="currentColor" />
-          <rect class="bar bar2" x="6" y="13" width="16" height="2.2" rx="1"
-            fill="currentColor" />
-          <rect class="bar bar3" x="6" y="18" width="16" height="2.2" rx="1"
-            fill="currentColor" />
-        </svg>
-      </button>
-      <h1>Route Test Tool Runner</h1>
-    </div>
-    <span id="version" class="app-version"></span>
-  </nav>
-  <div id="nav-loading-beam" class="loading-beam" hidden></div>
-  <div id="toast" class="toast" hidden></div>
-
-  <!-- Slide-out Panel (initially hidden/closed) -->
-  <aside id="slidePanel" class="slide-panel" aria-hidden="true">
-    <button id="closePanelBtn" class="btn-sm btn--danger btn--icon"
-      aria-label="Close panel">
-      <!-- X icon SVG -->
-      <svg width="128" height="128" viewBox="0 0 28 28" aria-hidden="true"
-        focusable="false">
-        <line x1="8" y1="8" x2="20" y2="20" stroke="currentColor"
-          stroke-width="2.4" stroke-linecap="round" />
-        <line x1="20" y1="8" x2="8" y2="20" stroke="currentColor"
-          stroke-width="2.4" stroke-linecap="round" />
-      </svg>
-    </button>
-
-    <div class="panel-header">
-      <h2>Schedule Job</h2>
-    </div>
-    <div class="panel-content schedule-panel">
-      <div class="schedule-form-backdrop">
-        <form id="scheduleForm" class="schedule-form">
-          <label>
-            Schedule Time:
-          </label>
-          <div class="date-picker-with-tooltip">
-            <input id="schedulePicker" class="input" type="text"
-              placeholder="Select date and time" />
-            <button type="button" class="new-icon"
-              aria-describedby="start-date-tooltip"
-              aria-label="Scheduler start time info">
-              <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"
-                focusable="false" xmlns="http://www.w3.org/2000/svg">
-                <title>New</title>
-                <g stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                  stroke-linejoin="round" fill="none">
-                  <path d="M12 2v20M2 12h20M4 4l16 16M20 4L4 20" />
-                </g>
-              </svg>
-              <span role="tooltip" id="start-date-tooltip" class="tooltip">
-                Time selected will be the scheduler event start time
-              </span>
-            </button>
-          </div>
-          <div class="schedule-form-btn-group">
-            <button id="saveScheduleBtn" class="btn-md btn--primary"
-              type="submit" disabled>Save</button>
-            <button id="cancelEditBtn" class="btn-md btn--danger" type="button"
-              title="Cancel edit" hidden>
-              Cancel
-            </button>
-          </div>
-          <div id="scheduleFormError" class="schedule-form-error" hidden></div>
-        </form>
-      </div>
-      <hr class="schedule-divider" />
-      <div id="scheduleList" class="schedule-list">
-        <!-- JS will render cards here -->
-      </div>
-    </div>
-  </aside>
-
-  <div class="action-row">
-    <div class="run-actions">
-      <button id="runBtn" class="btn btn--primary">Run Route
-        Test</button>
-      <span id="spinner" class="spinner" hidden></span>
-    </div>
-    <div id="stepProgressContainer" class="step-progress-container" hidden>
-    </div>
-    <div class="run-actions end">
-      <button id="stopBtn" class="btn btn--danger btn--icon" type="button"
-        title="Stop job" aria-label="Stop job" hidden>
-        Cancel
-        <!-- Themed SVG stop/cancel icon, e.g., a red octagon or X -->
-        <svg viewBox="0 0 20 20" width="22" height="22" aria-hidden="true"
-          focusable="false">
-          <rect x="3" y="3" width="14" height="14" rx="4" fill="none"
-            stroke="currentColor" stroke-width="2" />
-          <line x1="6" y1="6" x2="14" y2="14" stroke="currentColor"
-            stroke-width="2" />
-          <line x1="14" y1="6" x2="6" y2="14" stroke="currentColor"
-            stroke-width="2" />
-        </svg>
-      </button>
-      <button id="fetchResultBtn" class="btn btn--icon" type="button"
-        title="Fetch last result" aria-label="Fetch last result">
-        <svg viewBox="0 0 20 20" width="22" height="22" aria-hidden="true"
-          focusable="false">
-          <polyline points="6 8 10 12 14 8" fill="none" stroke="currentColor"
-            stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
-        </svg>
-      </button>
-    </div>
-  </div>
-
-  <pre id="status">Status: Checking...</pre>
-  <div class="output-container">
-    <span id="outputBadge" class="output-source-badge" hidden></span>
-    <pre id="output">Output will appear here.
-
-    </pre>
-    <button id="copyBtn" class="btn btn--icon btn--copy"
-      title="Copy output to clipboard" aria-label="Copy output">
-      Copy
-      <!-- Inline SVG clipboard icon (visible in all modern browsers) -->
-      <svg viewBox="0 0 20 20" width="22" height="22" aria-hidden="true"
-        focusable="false">
-        <rect x="6" y="2.5" width="8" height="3" rx="1.2" fill="none"
-          stroke="currentColor" stroke-width="1.4" />
-        <rect x="4" y="5" width="12" height="12" rx="2.5" fill="none"
-          stroke="currentColor" stroke-width="1.6" />
-        <rect x="8.5" y="7.7" width="3" height="5.3" rx="1" fill="currentColor"
-          opacity="0.25" />
-      </svg>
-    </button>
-    <button id="saveBtn" class="btn btn--icon btn--save"
-      title="Save output as file" aria-label="Save output">
-      <!-- Floppy disk SVG icon, matching theme -->
-      <svg viewBox="0 0 22 22" width="22" height="22" aria-hidden="true"
-        focusable="false">
-        <rect x="4" y="3" width="14" height="15" rx="2.5" fill="none"
-          stroke="currentColor" stroke-width="1.5" />
-        <rect x="7" y="5" width="8" height="3.3" rx="0.7" fill="none"
-          stroke="currentColor" stroke-width="1.1" />
-        <rect x="8" y="12" width="6" height="3.2" rx="1" fill="currentColor"
-          opacity="0.25" />
-        <polyline points="7,10 11,15 15,10" fill="none" stroke="currentColor"
-          stroke-width="1.2" />
-      </svg>
-    </button>
-  </div>
+  <div id="root"></div>
 </body>
 
 </html>

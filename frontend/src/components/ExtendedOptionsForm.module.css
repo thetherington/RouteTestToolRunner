@@ -1,0 +1,178 @@
+.extended-form-container {
+    margin-top: 2em;
+    display: flex;
+    flex-direction: column;
+    /* gap: 1.5em; */
+}
+
+.form-section {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 0.8em;
+    width: inherit;
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.dest-count-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(129, 170, 255, 0.12);
+    color: var(--color-accent-main, #81aaff);
+    border: 1px solid rgba(129, 170, 255, 0.14);
+    padding: 0.12em 0.45em;
+    font-size: 0.78em;
+    font-weight: 600;
+    border-radius: 999px;
+    min-width: 1.6em;
+    height: 1.6em;
+}
+
+.form-label {
+    font-size: 1em;
+    color: #bcc5de;
+    font-weight: 500;
+}
+
+.form-input {
+    background: #1a1d29;
+    border: 1px solid #3a3f54;
+    border-radius: 0.5em;
+    color: #bcc5de;
+    padding: 0.6em 0.8em;
+    font-size: 0.95em;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    font-family: inherit;
+    box-sizing: border-box;
+    width: inherit;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: #81aaff;
+    box-shadow: 0 0 0 2px rgba(129, 170, 255, 0.1);
+}
+
+.form-input::placeholder {
+    color: #6b7280;
+}
+
+.destinations-scroll {
+    /* max-height: 420px; */
+    max-height: 50vh;
+    overflow-y: auto;
+    margin-bottom: 0.7em;
+    padding-right: 0.2em;
+    transition: max-height 0.2s;
+    display: flex;
+    flex-direction: column;
+}
+
+.destinations-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6em;
+}
+
+.destination-input-group {
+    display: flex;
+    gap: 0.5em;
+    align-items: center;
+}
+
+.destination-input-group .form-input {
+    flex: 1;
+}
+
+.delete-btn {
+    flex-shrink: 0;
+}
+
+.add-destination-btn {
+    align-self: flex-start;
+    margin-top: 0.5em;
+    margin-bottom: 0.2em;
+}
+
+.button-row {
+    display: flex;
+    gap: 0.8em;
+    margin-top: 1em;
+    padding-top: 1em;
+    border-top: 1px solid #3a3f54;
+    justify-content: space-between;
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    background: none;
+    border-radius: 0;
+}
+
+.button-group {
+    display: flex;
+    gap: 0.8em;
+}
+
+.input-wrap {
+    position: relative;
+    width: 100%;
+}
+
+/* overlay positioned at the end of the input, vertically centered */
+.overlay {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    pointer-events: none;
+    white-space: nowrap;
+}
+
+/* muted/italic multicast text */
+.overlay-text {
+    color: #6b7280; /* muted gray */
+    font-size: 0.9rem;
+    font-style: italic;
+}
+
+/* muted/italic multicast text */
+.overlay-text-slab {
+    color: #6b7280; /* muted gray */
+    font-size: 0.7rem;
+    font-style: italic;
+}
+
+/* yellow exclamation-style icon styling */
+.overlay-icon {
+    width: 20px;
+    height: 20px;
+    stroke: #ffc107;
+    fill: none;
+}
+
+@media (max-width: 600px) {
+    .button-group {
+        flex-direction: column;
+    }
+
+    .destination-input-group {
+        flex-direction: column;
+    }
+
+    .destination-input-group .form-input {
+        width: 100%;
+    }
+
+    .delete-btn {
+        align-self: flex-start;
+    }
+}

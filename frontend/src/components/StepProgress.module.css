@@ -1,0 +1,89 @@
+.step-progress-container {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 3.5em;
+    -webkit-user-select: none;
+    user-select: none;
+    z-index: 1100;
+    position: relative;
+}
+@media (max-width: 900px) {
+    .step-progress-container {
+        display: none;
+    }
+}
+.step-progress-container .step-progress-bar {
+    display: flex;
+    align-items: center;
+    gap: 1.85em;
+}
+.step-progress-container .step-progress-bar .step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    min-width: 4em;
+}
+.step-progress-container .step-progress-bar .step .circle {
+    width: 1.5em;
+    height: 1.5em;
+    margin-bottom: 12px;
+    border-radius: 50%;
+    background: #23273a;
+    border: 2.1px solid #373d4e;
+    transition: background 0.19s, border 0.19s;
+    box-shadow: 0 1px 6px #0e101580;
+    color: #c0daff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 620;
+    font-size: 1.03em;
+}
+.step-progress-container .step-progress-bar .step.completed .circle {
+    background: var(--color-accent-main);
+    border-color: var(--color-accent-main);
+    color: #141927;
+}
+.step-progress-container .step-progress-bar .step.current .circle {
+    background: var(--color-accent-green);
+    border-color: var(--color-accent-green);
+    color: #081a13;
+}
+.step-progress-container .step-progress-bar .step.current .circle.error {
+    background: var(--color-accent-magenta);
+    border-color: var(--color-accent-magenta);
+    color: #fff;
+}
+.step-progress-container .step-progress-bar .step .label {
+    font-size: 0.91em;
+    font-weight: 500;
+    color: #94b1ec;
+    white-space: nowrap;
+    letter-spacing: 0.02em;
+    text-shadow: 0 1px 5px rgba(16, 20, 32, 0.4666666667);
+}
+.step-progress-container .step-progress-bar .step:after {
+    content: "";
+    position: absolute;
+    top: 0.7em;
+    left: 60%;
+    width: 5.1em;
+    height: 0.33em;
+    background: #294268;
+    border-radius: 0.19em;
+    transition: background 0.2s;
+    z-index: -1;
+}
+.step-progress-container .step-progress-bar .step.completed:after {
+    background: var(--color-accent-main);
+}
+.step-progress-container
+    .step-progress-bar
+    .step.completed:has(+ .current > .circle.error):after {
+    background: var(--color-accent-magenta);
+}
+.step-progress-container .step-progress-bar .step:last-child:after {
+    display: none;
+}

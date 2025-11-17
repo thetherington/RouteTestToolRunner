@@ -1,0 +1,10 @@
+pre {
+    background: var(--color-accent-pre-bg);
+    color: var(--color-pre-text);
+    border-radius: 4px;
+    border: 1px solid var(--color-accent-pre-border);
+    padding: 1em;
+    font-size: 1.05em;
+    overflow: auto;
+    box-shadow: 0 2px 8px var(--color-accent-pre-shadow);
+}
