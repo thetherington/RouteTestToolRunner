@@ -7,19 +7,28 @@ import {
     type ReactNode,
 } from "react";
 import { useRouteTestScheduler } from "../hooks/useRouteTestScheduler";
-import type { Schedule } from "../api/scheduleApi";
+import type { IExtendedOptions, Schedule } from "../types/schedule";
 
 type ScheduleContextType = {
     schedules: Schedule[];
     refreshSchedules: () => void;
-    createSchedule: (time: string) => void;
+    createSchedule: (
+        time: string,
+        extendedOptions: IExtendedOptions | undefined
+    ) => void;
     updateSchedule: (time: string) => void;
     deleteSchedule: (id: string) => void;
     cancelEdit: () => void;
     fetchScheduleResult: (id: string) => void;
     clearError: () => void;
-    enableEdit: (id: string, time: string) => void;
+    enableEdit: (
+        id: string,
+        time: string,
+        extendedOptions: IExtendedOptions | null
+    ) => void;
     setTime: Dispatch<React.SetStateAction<string>>;
+    extendedOptions: IExtendedOptions | null;
+    setExtendedOptions: Dispatch<React.SetStateAction<IExtendedOptions | null>>;
     error: string | undefined;
     time: string;
     editId: string;
@@ -36,6 +45,8 @@ const ScheduleContext = createContext<ScheduleContextType>({
     fetchScheduleResult: function (): void {},
     enableEdit: function (): void {},
     setTime: function (): void {},
+    setExtendedOptions: function (): void {},
+    extendedOptions: null,
     error: "",
     time: "",
     editId: "",
@@ -52,6 +63,8 @@ export const ScheduleContextProvider: FC<SchedulerProviderProps> = ({
 }) => {
     const [time, setTime] = useState<string>("");
     const [editId, setEditId] = useState<string>("");
+    const [extendedOptions, setExtendedOptions] =
+        useState<IExtendedOptions | null>(null);
 
     const {
         createScheduleMutate,
@@ -62,21 +75,27 @@ export const ScheduleContextProvider: FC<SchedulerProviderProps> = ({
         getReport,
     } = useRouteTestScheduler();
 
-    const createSchedule = (time: string) => {
-        createScheduleMutate.mutate(time, {
-            onSuccess: () => {
-                refetchSchedules();
-                setTime("");
-            },
-            onError: () => {
-                setTime(time);
-            },
-        });
+    const createSchedule = (
+        time: string,
+        extendedOptions: IExtendedOptions | undefined = undefined
+    ) => {
+        createScheduleMutate.mutate(
+            { time, extendedOptions },
+            {
+                onSuccess: () => {
+                    refetchSchedules();
+                    setTime("");
+                },
+                onError: () => {
+                    setTime(time);
+                },
+            }
+        );
     };
 
     const updateSchedule = (time: string) => {
         updateScheduleMutate.mutate(
-            { id: editId, time },
+            { id: editId, time, extendedOptions: extendedOptions || undefined },
             {
                 onSuccess: () => {
                     refetchSchedules();
@@ -101,6 +120,7 @@ export const ScheduleContextProvider: FC<SchedulerProviderProps> = ({
     const cancelEdit = () => {
         setEditId("");
         setTime("");
+        setExtendedOptions(null);
     };
 
     const refreshSchedules = () => {
@@ -117,9 +137,14 @@ export const ScheduleContextProvider: FC<SchedulerProviderProps> = ({
         updateScheduleMutate.reset();
     };
 
-    const enableEdit = (id: string, time: string) => {
+    const enableEdit = (
+        id: string,
+        time: string,
+        options: IExtendedOptions | null = null
+    ) => {
         setEditId(id);
         setTime(time);
+        setExtendedOptions(options);
     };
 
     const error =
@@ -132,6 +157,8 @@ export const ScheduleContextProvider: FC<SchedulerProviderProps> = ({
         deleteSchedule,
         refreshSchedules,
         fetchScheduleResult,
+        setExtendedOptions,
+        extendedOptions,
         cancelEdit,
         clearError,
         enableEdit,

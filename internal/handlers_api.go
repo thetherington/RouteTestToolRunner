@@ -81,6 +81,11 @@ func RegisterJobHandlers(r chi.Router, app *App) {
 	})
 }
 
+type ScheduleReqPayload struct {
+	Time            string           `json:"time"`
+	ExtendedOptions *ExtendedOptions `json:"extendedOptions,omitempty"`
+}
+
 func RegisterSchedulerHandlers(r chi.Router, app *App) {
 	r.Get("/api/schedules", func(w http.ResponseWriter, r *http.Request) {
 		app.scheduleMutex.Lock()
@@ -95,9 +100,7 @@ func RegisterSchedulerHandlers(r chi.Router, app *App) {
 	})
 
 	r.Post("/api/schedules", func(w http.ResponseWriter, r *http.Request) {
-		var req struct {
-			Time string `json:"time"`
-		}
+		var req ScheduleReqPayload
 
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			http.Error(w, "bad request", http.StatusBadRequest)
@@ -122,16 +125,19 @@ func RegisterSchedulerHandlers(r chi.Router, app *App) {
 		// Deep copy of current file config for this schedule
 		cfg := app.Config.File.DeepCopy()
 
-		// modify the cli script command to include schedule time argument
-		if len(cfg.Scheduler.Commands) > 1 {
-			// TODO: pass schedule time as either formatted time stamp or unix epoch.
-			// TODO: find the right cli command to accept this argument instead of using the last item in the command list
-			idx := len(cfg.Scheduler.Commands) - 1
-			cfg.Scheduler.Commands[idx] = fmt.Sprintf("%s --schedule-time=%s", cfg.Scheduler.Commands[idx], schedTime.Format(time.RFC3339))
+		// Render all command slices
+		if err := renderAllCommandSlices(&cfg, &renderAllOptionArgs{req.Time, req.ExtendedOptions}); err != nil {
+			WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+			return
 		}
 
 		// create the schedule object
-		sched := &Schedule{ID: id, Time: schedTime, FileConfig: cfg}
+		sched := &Schedule{
+			ID:              id,
+			Time:            schedTime,
+			FileConfig:      cfg,
+			ExtendedOptions: req.ExtendedOptions,
+		}
 
 		if err := app.AddScheduledJob(sched); err != nil {
 			slog.Error("failed to create cron task", "error", err)
@@ -149,9 +155,7 @@ func RegisterSchedulerHandlers(r chi.Router, app *App) {
 	r.Put("/api/schedules/{id}", func(w http.ResponseWriter, r *http.Request) {
 		scheduleID := chi.URLParam(r, "id")
 
-		var req struct {
-			Time string `json:"time"`
-		}
+		var req ScheduleReqPayload
 
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			http.Error(w, "bad request", http.StatusBadRequest)
@@ -197,15 +201,15 @@ func RegisterSchedulerHandlers(r chi.Router, app *App) {
 		}
 
 		sched.Time = schedTime
+		sched.ExtendedOptions = req.ExtendedOptions
 
-		// modify the cli script command to include schedule time argument
-		if len(sched.FileConfig.Scheduler.Commands) > 1 {
-			// TODO: pass schedule time as either formatted time stamp or unix epoch.
-			// TODO: find the right cli command to accept this argument instead of using the last item in the command list
-			idx := len(sched.FileConfig.Scheduler.Commands) - 1
-			sched.FileConfig.Scheduler.Commands[idx] = fmt.Sprintf("%s --schedule-time=%s",
-				app.Config.File.Scheduler.Commands[idx], schedTime.Format(time.RFC3339),
-			)
+		// replace the FileConfig with a fresh copy of the current config
+		sched.FileConfig = app.Config.File.DeepCopy()
+
+		// Render all command slices
+		if err := renderAllCommandSlices(&sched.FileConfig, &renderAllOptionArgs{req.Time, req.ExtendedOptions}); err != nil {
+			WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+			return
 		}
 
 		if err := app.AddScheduledJob(sched); err != nil {

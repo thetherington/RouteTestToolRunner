@@ -1,10 +1,4 @@
-export type Schedule = {
-    id: string;
-    time: string;
-    hasError: boolean;
-    isRunning: boolean;
-    isPast?: boolean;
-};
+import type { IExtendedOptions, Schedule } from "../types/schedule";
 
 export type SchedulesResponse = {
     schedules: Schedule[];
@@ -15,11 +9,19 @@ export type ScheduleReport = {
     RunType: string;
 };
 
-export async function createSchedule(time: string): Promise<Schedule> {
+export type CreateScheduleParams = {
+    time: string;
+    extendedOptions?: IExtendedOptions;
+};
+
+export async function createSchedule({
+    time,
+    extendedOptions,
+}: CreateScheduleParams): Promise<Schedule> {
     const res = await fetch("/api/schedules", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ time }),
+        body: JSON.stringify({ time, extendedOptions }),
     });
 
     if (!res.ok) {
@@ -34,18 +36,19 @@ export async function createSchedule(time: string): Promise<Schedule> {
     return res.json();
 }
 
-type updateScheduleParams = {
+type UpdateScheduleParams = CreateScheduleParams & {
     id: string;
-    time: string;
 };
 
-export async function updateSchedule(
-    params: updateScheduleParams
-): Promise<Schedule> {
-    const res = await fetch(`/api/schedules/${params.id}`, {
+export async function updateSchedule({
+    id,
+    time,
+    extendedOptions = undefined,
+}: UpdateScheduleParams): Promise<Schedule> {
+    const res = await fetch(`/api/schedules/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ time: params.time }),
+        body: JSON.stringify({ time, extendedOptions }),
     });
 
     if (!res.ok) {

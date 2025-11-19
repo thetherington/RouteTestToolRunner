@@ -47,6 +47,7 @@ class SlabLogSearchParams(TypedDict):
 
     map: Dict[str, RouterMapEntry]
     mcast: str
+    source: str
     analytics_address: NotRequired[str]
 
 
@@ -88,6 +89,7 @@ class SlabLogSearch:
 
     def __init__(self, **kwargs: Unpack[SlabLogSearchParams]) -> None:
         self.mcast: str = ""
+        self.source: str = ""
         self.router_map: Dict[str, RouterMapEntry] = {}
 
         analytics_address = "127.0.0.1"
@@ -103,6 +105,9 @@ class SlabLogSearch:
 
             if key == "mcast":
                 self.mcast = str(value)
+
+            if key == "source":
+                self.source = str(value)
 
             if "analytics" in key and value:
                 analytics_address = value
@@ -191,7 +196,7 @@ class SlabLogSearch:
         """Generator that collects logs and yields the printout"""
 
         missing_logs = 0
-        yield f"\nSource DCZA026A (multicast: {self.mcast}):"
+        yield f"\nSource {self.source} (multicast: {self.mcast}):"
 
         for dst in self.router_map:
             entry = self.router_map[dst]
@@ -251,7 +256,7 @@ def main() -> None:
     args_parser.add_argument(
         "-map",
         "--router-map",
-        required=True,
+        required=False,
         type=str,
         metavar="<routermap.json>",
         default="routermap.json",
@@ -260,10 +265,28 @@ def main() -> None:
     args_parser.add_argument(
         "-mcast",
         "--ip-mcast-source",
-        required=True,
+        required=False,
         type=str,
-        metavar="<239.1.1.1>",
-        help="IP Multicast Source",
+        metavar="<239.131.1.161>",
+        default="239.131.1.161",
+        help="Multicast Address of the Source",
+    )
+    args_parser.add_argument(
+        "-source",
+        "--broadview-source",
+        required=False,
+        type=str,
+        metavar="",
+        default="DCZA026A",
+        help="Broadview Source Name",
+    )
+    args_parser.add_argument(
+        "-data",
+        "--router-data",
+        required=False,
+        type=str,
+        metavar="",
+        help="A JSON string of the router map",
     )
     args_parser.add_argument(
         "-insite",
@@ -277,9 +300,15 @@ def main() -> None:
 
     args = args_parser.parse_args()
 
+    if args.router_data:
+        router_map = json.loads(args.router_data)
+    else:
+        router_map = load_router_map(args.router_map)
+
     params: SlabLogSearchParams = {
         "mcast": args.ip_mcast_source,
-        "map": load_router_map(args.router_map),
+        "source": args.broadview_source,
+        "map": router_map,
         "analytics_address": args.analytics_ip,
     }
 

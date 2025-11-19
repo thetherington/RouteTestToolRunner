@@ -211,7 +211,9 @@ func (app *App) RunJob(ctx context.Context) JobResult {
 
 		app.mutex.Unlock()
 
-		app.SetLastResult(app.ExecuteRunnerTasks(ctx, Manual))
+		app.SetLastResult(
+			app.ExecuteRunnerTasks(ctx, Manual),
+		)
 	}()
 
 	return JobResult{Running: true}
