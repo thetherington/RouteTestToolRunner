@@ -11,12 +11,13 @@ import (
 )
 
 type Schedule struct {
-	ID         string     `json:"id"`
-	Time       time.Time  `json:"time"`
-	IsPast     bool       `json:"isPast,omitempty"`
-	HasError   bool       `json:"hasError"`
-	IsRunning  bool       `json:"isRunning"`
-	FileConfig FileConfig `json:"-"`
+	ID              string           `json:"id"`
+	Time            time.Time        `json:"time"`
+	IsPast          bool             `json:"isPast,omitempty"`
+	HasError        bool             `json:"hasError"`
+	IsRunning       bool             `json:"isRunning"`
+	FileConfig      FileConfig       `json:"-"`
+	ExtendedOptions *ExtendedOptions `json:"extendedOptions,omitempty"`
 }
 
 type ScheduleResult struct {
@@ -116,8 +117,9 @@ func (app *App) runScheduledJob(sched *Schedule) {
 	output.WriteString(fmt.Sprintf("Scheduler:\n%s\n\n", result.SchedulerOutput))
 	output.WriteString(fmt.Sprintf("SDVN:\n%s\n\n", result.SDVNOutput))
 	output.WriteString(fmt.Sprintf("Slab:\n%s\n", result.SlabOutput))
+
 	if result.Error != "" {
-		output.WriteString(fmt.Sprintf("\nError:%s\n", result.SlabOutput))
+		output.WriteString(fmt.Sprintf("\nError:%s\n", result.Error))
 	}
 
 	// Store result for this schedule (even if manually canceled)

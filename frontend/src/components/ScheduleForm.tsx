@@ -5,11 +5,10 @@ import Flatpickr from "react-flatpickr";
 import { useScheduler } from "../context/ScheduleContext";
 import IconAsterisk from "../icons/IconAsterisk";
 import IconXLine from "../icons/IconXLine";
+import type { IExtendedOptions } from "../types/schedule";
 import Button from "./Button";
 import ExtendedOptionsBadges from "./ExtendedOptionsBadges";
-import ExtendedOptionsForm, {
-    type ExtendedOptionsData,
-} from "./ExtendedOptionsForm";
+import ExtendedOptionsForm from "./ExtendedOptionsForm";
 import styles from "./ScheduleForm.module.css";
 import SlideOutPanel from "./SlideOutPanel";
 import ToggleSwitch from "./ToggleSwitch";
@@ -27,6 +26,8 @@ const ScheduleForm: FC = (): ReactElement => {
         editId,
         setTime,
         cancelEdit,
+        extendedOptions,
+        setExtendedOptions,
     } = useScheduler();
 
     const handleDateChange = (_: Date[], dateStr: string) => {
@@ -41,7 +42,7 @@ const ScheduleForm: FC = (): ReactElement => {
         if (time && time !== "") {
             switch (mode) {
                 case Create:
-                    createSchedule(time);
+                    createSchedule(time, extendedOptions || undefined);
                     break;
 
                 case Update:
@@ -51,10 +52,10 @@ const ScheduleForm: FC = (): ReactElement => {
     };
 
     const [showExtended, setShowExtended] = useState(false);
-    const [extendedOptions, setExtendedOptions] =
-        useState<ExtendedOptionsData | null>(null);
+    // const [extendedOptions, setExtendedOptions] =
+    //     useState<IExtendedOptions | null>(null);
 
-    const handleExtendedOptionsSave = (data: ExtendedOptionsData) => {
+    const handleExtendedOptionsSave = (data: IExtendedOptions) => {
         setExtendedOptions(data);
         console.log("Extended options saved:", data);
         setShowExtended(false);

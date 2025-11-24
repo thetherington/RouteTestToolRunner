@@ -1,7 +1,7 @@
 import { type FC, type ReactElement } from "react";
-import type { Schedule } from "../api/scheduleApi";
-import ScheduleItem from "./ScheduleItem";
 import { useScheduler } from "../context/ScheduleContext";
+import type { Schedule } from "../types/schedule";
+import ScheduleItem from "./ScheduleItem";
 
 type ScheduleTime = string | number | Date;
 

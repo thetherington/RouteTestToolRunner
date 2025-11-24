@@ -6,6 +6,7 @@ import { validateTerminals } from "../api/terminalApi";
 import IconDownArrow from "../icons/IconDownArrow";
 import IconExclamation from "../icons/IconExclamation";
 import IconXLine from "../icons/IconXLine";
+import type { IExtendedOptions } from "../types/schedule";
 import Button from "./Button";
 import Divider from "./Divider";
 import styles from "./ExtendedOptionsForm.module.css";
@@ -13,35 +14,22 @@ import LoadingBeam from "./LoadingBeam";
 import stylesForm from "./ScheduleForm.module.css";
 import Spinner from "./Spinner";
 
-interface SourceData {
-    value: string;
-    multicast?: string;
-}
-
-interface DestinationData {
-    value: string;
-    dst?: number;
-    slabs?: string[];
-}
-
 interface ExtendedOptionsFormProps {
-    onSave?: (data: ExtendedOptionsData) => void;
-    initialData?: ExtendedOptionsData | null;
+    onSave?: (data: IExtendedOptions) => void;
+    initialData?: IExtendedOptions | null;
     onClose?: () => void;
 }
 
-export interface ExtendedOptionsData {
-    source: SourceData;
-    destinations: DestinationData[];
-}
+type SourceType = IExtendedOptions["source"];
+type DestinationType = IExtendedOptions["destinations"][number];
 
 const ExtendedOptionsForm: FC<ExtendedOptionsFormProps> = ({
     onSave,
     initialData,
     onClose,
 }): ReactElement => {
-    const [source, setSource] = useState<SourceData>({ value: "" });
-    const [destinations, setDestinations] = useState<DestinationData[]>([
+    const [source, setSource] = useState<SourceType>({ value: "" });
+    const [destinations, setDestinations] = useState<DestinationType[]>([
         { value: "" },
     ]);
     const destinationsScrollRef = useRef<HTMLDivElement>(null);
@@ -63,7 +51,7 @@ const ExtendedOptionsForm: FC<ExtendedOptionsFormProps> = ({
         if (initialData) {
             setSource(initialData.source);
             setDestinations(
-                initialData.destinations.length > 0
+                initialData.destinations?.length > 0
                     ? initialData.destinations
                     : [{ value: "" }]
             );
@@ -193,7 +181,7 @@ const ExtendedOptionsForm: FC<ExtendedOptionsFormProps> = ({
             : destinations.length;
 
     const renderDestinationInput = (
-        destination: DestinationData,
+        destination: DestinationType,
         index: number
     ) => (
         <div key={index} className={styles["destination-input-group"]}>

@@ -107,12 +107,15 @@ func (app *App) ExecuteRunnerTasks(ctx context.Context, runType RunType, config 
 		}
 	}
 
-	var cfg FileConfig = app.Config.File
+	var cfg FileConfig = app.Config.File.DeepCopy()
 
 	// use custom config for this run if provided
 	if len(config) > 0 {
 		cfg = config[0]
 	}
+
+	// removes template keys that were not replaced (manual run)
+	renderAllCommandSlices(&cfg, nil)
 
 	var err error
 

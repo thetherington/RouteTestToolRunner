@@ -1,16 +1,17 @@
 import { type FC, type ReactElement } from "react";
-import type { Schedule } from "../api/scheduleApi";
-import Spinner from "./Spinner";
 import LoadingBeam from "./LoadingBeam";
+import Spinner from "./Spinner";
 
-import styles from "./ScheduleItem.module.css";
-import Button from "./Button";
+import { useScheduler } from "../context/ScheduleContext";
+import IconCheckMark from "../icons/IconCheckMark";
 import IconDownload from "../icons/IconDownload";
 import IconPencil from "../icons/IconPencil";
-import IconXLine from "../icons/IconXLine";
+import IconRoute from "../icons/IconRoute";
 import IconXBold from "../icons/IconXBold";
-import IconCheckMark from "../icons/IconCheckMark";
-import { useScheduler } from "../context/ScheduleContext";
+import IconXLine from "../icons/IconXLine";
+import type { Schedule } from "../types/schedule";
+import Button from "./Button";
+import styles from "./ScheduleItem.module.css";
 
 interface ScheduleItemProps {
     schedule: Schedule;
@@ -46,6 +47,7 @@ const ScheduleItem: FC<ScheduleItemProps> = ({ schedule }): ReactElement => {
                 )}
             </div>
             <div className={styles["schedule-actions"]}>
+                {schedule.extendedOptions ? <IconRoute /> : null}
                 <Button
                     onClick={() => fetchScheduleResult(schedule.id)}
                     size="sm"
@@ -55,7 +57,15 @@ const ScheduleItem: FC<ScheduleItemProps> = ({ schedule }): ReactElement => {
                     <IconDownload />
                 </Button>
                 <Button
-                    onClick={() => enableEdit(schedule.id, schedule.time)}
+                    onClick={() =>
+                        enableEdit(
+                            schedule.id,
+                            schedule.time,
+                            schedule.extendedOptions
+                                ? schedule.extendedOptions
+                                : null
+                        )
+                    }
                     size="sm"
                     variant={editMode ? "edit" : "success"}
                     icon

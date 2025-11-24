@@ -2,7 +2,11 @@ scheduler:
   ip: "10.131.40.45"
   commands: 
     - "date"
-    - "/home/etdev/Report_Script/sxm_profile_w_encryption_v1_4.py"
+    - |-
+      /home/etdev/Report_Script/sxm_profile_w_encryption_v1_4.py
+      {{if .ScheduleTime}}--schedule-time={{.ScheduleTime}}{{end}} 
+      {{if .Source}}--source={{.Source}}{{end}} 
+      {{if gt (len .Destinations) 0}}--destinations {{range .Destinations}}{{.}} {{end}}{{end}}
 
 sdvn:
   ip: "10.131.40.20"
@@ -15,4 +19,9 @@ sdvn:
 slab:
   commands: 
     - "sleep 180"
-    - "python3 slab_logs_script.py -map routermap.json -mcast 239.131.1.161 -insite 127.0.0.1"
+    - |-
+      python3 slab_logs_script.py 
+      --analytics-ip=127.0.0.1
+      {{if .Multicast}}--ip-mcast-source={{.Multicast}}{{end}} 
+      {{if .Source}}--broadview-source={{.Source}}{{end}} 
+      {{if .RouteMapData}}--router-data {{.RouteMapData}}{{else}}--router-map=routermap.json{{end}} 
