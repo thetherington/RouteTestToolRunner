@@ -21,8 +21,10 @@ type Schedule struct {
 }
 
 type ScheduleResult struct {
-	Output  string  `json:"output"`
-	RunType RunType `json:"RunType"`
+	Output     string           `json:"output"`
+	RunType    RunType          `json:"RunType"`
+	Structured StructuredOutput `json:"structured,omitempty"`
+	RunTime    *time.Time       `json:"runTime,omitempty"`
 }
 
 // checkScheduleConflict will return a conflict message if another schedule (other than exceptID) is within 5 minute of schedTime.
@@ -85,9 +87,11 @@ func (app *App) runScheduledJob(sched *Schedule) {
 	if app.running {
 		app.mutex.Unlock()
 
-		// Optionally: record that the job was skipped due to a conflict
+		// record that the job was skipped due to a conflict
 		app.scheduleMutex.Lock()
-		app.scheduleResults[sched.ID] = &ScheduleResult{Output: "Job skipped: another job was already running.\n\n", RunType: Scheduled}
+		app.scheduleResults[sched.ID] = &ScheduleResult{
+			Output: "Job skipped: another job was already running.\n\n", RunType: Scheduled, RunTime: &sched.Time,
+		}
 		app.schedules[sched.ID].IsPast = true
 		app.schedules[sched.ID].HasError = true
 		app.scheduleMutex.Unlock()
@@ -111,6 +115,7 @@ func (app *App) runScheduledJob(sched *Schedule) {
 
 	// ---- Execute the Tasks
 	result := app.ExecuteRunnerTasks(ctx, Scheduled, sched.FileConfig)
+	result.RunTime = &sched.Time
 
 	var output strings.Builder
 
@@ -125,8 +130,10 @@ func (app *App) runScheduledJob(sched *Schedule) {
 	// Store result for this schedule (even if manually canceled)
 	app.scheduleMutex.Lock()
 	app.scheduleResults[sched.ID] = &ScheduleResult{
-		Output:  output.String(),
-		RunType: Scheduled,
+		Output:     output.String(),
+		RunType:    Scheduled,
+		Structured: StructuredOutput{Json: result.Structured.Json},
+		RunTime:    &sched.Time,
 	}
 	app.schedules[sched.ID].IsPast = true
 	app.schedules[sched.ID].HasError = result.Error != ""

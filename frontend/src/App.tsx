@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useReducer, useState } from "react";
 
 import Button from "./components/Button";
 import LoadingBeam from "./components/LoadingBeam";
@@ -12,17 +12,85 @@ import IconDownArrow from "./icons/IconDownArrow";
 import IconX from "./icons/IconX";
 
 import { Bounce, toast, ToastContainer } from "react-toastify";
+import type { JobResultResponse } from "./api/jobApi";
+import type { ScheduleReport } from "./api/scheduleApi";
 import Scheduler from "./components/Scheduler";
 import { ScheduleContextProvider } from "./context/ScheduleContext";
 import { useRouteTestTool } from "./hooks/useRouteTestTool";
-import { formatOutput } from "./util/utils";
+import type { SlabLogs } from "./types/output";
+import {
+    extractEventStartTime,
+    formatOutput,
+    unmarshalSlabLogs,
+} from "./util/utils";
+
+type OutputState = {
+    outputText: string;
+    outputData?: SlabLogs;
+    scheduleTime: string;
+    runType?: "manual" | "scheduled" | undefined;
+};
+
+type Action =
+    | { type: "SET_OUTPUT_TEXT"; payload: string }
+    | { type: "SET_OUTPUT_DATA"; payload?: SlabLogs }
+    | { type: "SET_SCHEDULE_TIME"; payload: string }
+    | { type: "SET_RUN_TYPE"; payload?: "manual" | "scheduled" | undefined }
+    | { type: "RESET" }
+    | { type: "LOAD_SCHEDULE_REPORT"; payload: ScheduleReport };
+
+const initialState: OutputState = {
+    outputText: "Output will appear here.\n\n\n",
+    outputData: undefined,
+    scheduleTime: "",
+    runType: undefined,
+};
+
+function reducer(state: OutputState, action: Action): OutputState {
+    switch (action.type) {
+        case "SET_OUTPUT_TEXT":
+            return { ...state, outputText: action.payload };
+
+        case "SET_OUTPUT_DATA":
+            return { ...state, outputData: action.payload };
+
+        case "SET_SCHEDULE_TIME":
+            return { ...state, scheduleTime: action.payload };
+
+        case "SET_RUN_TYPE":
+            return { ...state, runType: action.payload };
+
+        case "RESET":
+            return { ...initialState };
+
+        case "LOAD_SCHEDULE_REPORT": {
+            const report = action.payload;
+            const text =
+                report.output === ""
+                    ? "No Scheduled Report Yet\n\n\n"
+                    : report.output;
+            const slabJson = (report as any)?.structured?.json?.slab;
+            const runType = (report as any)?.RunType || undefined;
+
+            return {
+                ...state,
+                outputText: text,
+                outputData: unmarshalSlabLogs(slabJson),
+                scheduleTime: report.runTime || "",
+                runType: runType,
+            };
+        }
+
+        default:
+            return state;
+    }
+}
 
 function App() {
     const [panelOpen, setPanelOpen] = useState<boolean>(false);
-    const [outputText, setOutputText] = useState(
-        "Output will appear here.\n\n\n"
-    );
     const [hideUIComponents, setHideUIComponents] = useState(false);
+
+    const [state, dispatch] = useReducer(reducer, initialState);
 
     const {
         version,
@@ -33,12 +101,42 @@ function App() {
         getLastJobResult,
         startJob,
         stopJob,
-    } = useRouteTestTool(setOutputText);
+    } = useRouteTestTool(setOutput);
 
-    const handleReportLoad = (output: string) => {
-        setOutputText(output === "" ? "No Scheduled Report Yet\n\n\n" : output);
+    // helper for passing into hook (it expects a setter-like)
+    function setOutput(results: JobResultResponse | undefined) {
+        dispatch({
+            type: "SET_OUTPUT_TEXT",
+            payload: formatOutput(results!),
+        });
+
+        const slabJson = results?.structured?.json?.slab;
+        dispatch({
+            type: "SET_OUTPUT_DATA",
+            payload: unmarshalSlabLogs(slabJson),
+        });
+
+        if (results?.RunType === "manual") {
+            const time = extractEventStartTime(results.SchedulerOutput);
+            if (time) {
+                dispatch({ type: "SET_SCHEDULE_TIME", payload: time });
+            }
+        } else {
+            dispatch({
+                type: "SET_SCHEDULE_TIME",
+                payload: results?.runTime || "",
+            });
+        }
+
+        dispatch({ type: "SET_RUN_TYPE", payload: results?.RunType });
+    }
+
+    const handleReportLoad = (report: ScheduleReport) => {
+        dispatch({ type: "LOAD_SCHEDULE_REPORT", payload: report });
+
         setPanelOpen(false);
         setHideUIComponents(true);
+
         toast.info("Loading Scheduled Report");
     };
 
@@ -65,9 +163,7 @@ function App() {
 
     // prevents rapid re-renders
     useEffect(() => {
-        jobCompleted
-            ? setOutputText(formatOutput(results!))
-            : setOutputText("Output will appear here.\n\n\n");
+        jobCompleted ? setOutput(results) : dispatch({ type: "RESET" });
     }, [jobCompleted, results]);
 
     useEffect(() => {
@@ -142,10 +238,12 @@ function App() {
                     {status?.activity}
                 </Status>
                 <Output
-                    text={outputText}
+                    outputText={state.outputText}
+                    outputData={state.outputData}
+                    scheduleTime={state.scheduleTime}
                     badge={
                         jobCompleted && results && !hideUIComponents
-                            ? results?.RunType
+                            ? state.runType
                             : undefined
                     }
                 />

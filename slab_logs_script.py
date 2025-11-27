@@ -49,6 +49,7 @@ class SlabLogSearchParams(TypedDict):
     mcast: str
     source: str
     analytics_address: NotRequired[str]
+    json_output: NotRequired[bool]
 
 
 class ShardsDict(TypedDict):
@@ -91,6 +92,7 @@ class SlabLogSearch:
         self.mcast: str = ""
         self.source: str = ""
         self.router_map: Dict[str, RouterMapEntry] = {}
+        self.json_output: bool = False
 
         analytics_address = "127.0.0.1"
         analytics_port = 9200
@@ -111,6 +113,9 @@ class SlabLogSearch:
 
             if "analytics" in key and value:
                 analytics_address = value
+
+            if key == "json_output" and isinstance(value, bool):
+                self.json_output = value
 
         # make the url "http://IP:PORT"
         analytics_url = f"{analytics_proto}://{analytics_address}:{analytics_port}"
@@ -192,7 +197,7 @@ class SlabLogSearch:
 
         return logs
 
-    def collect_logs(self) -> Generator[str, Any, None]:
+    def collect_output_formatted(self) -> Generator[str, Any, None]:
         """Generator that collects logs and yields the printout"""
 
         missing_logs = 0
@@ -226,9 +231,55 @@ class SlabLogSearch:
         if missing_logs > 0:
             raise ErrorMissingLogs(f"Total slabs missing logs: {missing_logs}")
 
-    def process_logs(self) -> None:
-        """print logs to the console using the generator"""
-        for line in self.collect_logs():
+    def collect_output_json(self) -> Generator[str, Any, None]:
+        """Generator that collects logs and yields the printout in json format"""
+
+        all_logs: Dict[str, Any] = {}
+        all_logs["source"] = self.source
+        all_logs["mcast"] = self.mcast
+        all_logs["destinations"] = {}
+
+        missing_logs = 0
+
+        for dst in self.router_map:
+            entry = self.router_map[dst]
+
+            eng = entry["eng"]
+            output = entry["dst"]
+
+            all_logs["destinations"][dst] = {
+                "eng": eng,
+                "slabs": {},
+            }
+
+            for slab in entry["slabs"]:
+                all_logs["destinations"][dst]["slabs"][slab] = []
+
+                time.sleep(0.2)  # to avoid overwhelming the server
+
+                try:
+                    for log in self.fetch(
+                        self.query(slab=slab, dst=output, mcast=self.mcast)
+                    ):
+                        all_logs["destinations"][dst]["slabs"][slab].append(log)
+
+                except ErrorMissingLogs:
+                    missing_logs += 1
+                    continue
+
+        yield json.dumps(all_logs)
+
+        if missing_logs > 0:
+            raise ErrorMissingLogs(f"Total slabs missing logs: {missing_logs}")
+
+    def run(self) -> None:
+        """print logs to the console using a generator"""
+        if self.json_output:
+            for line in self.collect_output_json():
+                print(line)
+            return
+
+        for line in self.collect_output_formatted():
             print(line)
 
 
@@ -297,6 +348,13 @@ def main() -> None:
         default="127.0.0.1",
         help="Multicast address",
     )
+    args_parser.add_argument(
+        "-format",
+        "--json-output",
+        required=False,
+        action="store_true",
+        help="Output in JSON format",
+    )
 
     args = args_parser.parse_args()
 
@@ -310,9 +368,10 @@ def main() -> None:
         "source": args.broadview_source,
         "map": router_map,
         "analytics_address": args.analytics_ip,
+        "json_output": args.json_output,
     }
 
-    SlabLogSearch(**params).process_logs()
+    SlabLogSearch(**params).run()
 
 
 if __name__ == "__main__":

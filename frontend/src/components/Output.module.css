@@ -1,13 +1,17 @@
 .output-container {
     position: relative;
-    margin-top: 3em;
+    margin-top: 2.5em;
     width: 100%;
     max-width: 100%;
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 19.5rem);
+    /* Account for nav (5.3em) + margin-top (3em) + some padding */
 }
 .output-container .output-source-badge {
     display: inline-block;
     position: absolute;
-    top: -1.59em;
+    top: 1.49em;
     left: 50%;
     transform: translate(-50%);
     padding: 0.18em 1.15em 0.17em;
@@ -42,15 +46,115 @@
 .output-container .copyBtn,
 .output-container .saveBtn {
     position: absolute;
-    top: 0.6em;
+    top: 5.6em;
     z-index: 2;
 }
 .output-container .copyBtn {
-    right: 5.5em;
+    right: 6.5em;
 }
 .output-container .saveBtn {
-    right: 1.2em;
+    right: 2.2em;
 }
 .output-container:has(> .output-source-badge[hidden]) {
     margin-top: 2em !important;
+}
+
+.tabsBar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 0.4rem;
+    border-bottom: 1px solid var(--color-accent-pre-border);
+    box-shadow: 1px 2px 10px 1px rgba(0, 0, 0, 0.3);
+    flex-shrink: 0;
+    /* Prevent tabs from shrinking */
+}
+
+.tabsLeft {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.tab {
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--color-title);
+    padding: 0.4rem 0.85rem;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, border 0.15s;
+}
+.tab:hover,
+.tab:focus {
+    background: #213b5398;
+    border-color: #373d4e;
+    outline: none;
+}
+.tabActive {
+    background: #315c8a;
+    border-color: #81aaff;
+    color: #fff;
+}
+
+.tabsRight {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Keep badge styling used elsewhere; ensure right alignment via tabsRight */
+.tabBadge {
+    margin-left: 0;
+    display: inline-flex;
+    align-items: center;
+}
+
+/* small panel for content below tabs */
+.output-panel {
+    padding: 0.8rem 0.6rem 1rem 0.6rem;
+    flex: 1;
+    /* Fill remaining space */
+    overflow: hidden;
+    /* Prevent content from overflowing */
+    display: flex;
+    flex-direction: column;
+}
+
+/* placeholders and small tweaks */
+.table-view {
+    flex: 1;
+    /* Fill parent container */
+    overflow: auto;
+    /* Allow scrolling if needed */
+    display: flex;
+    flex-direction: column;
+}
+.table-view__controls {
+    position: absolute;
+    top: 0.5rem;
+    right: 1rem;
+    z-index: 111;
+    transform: scale(0.95);
+    flex-shrink: 0;
+}
+.table-placeholder {
+    color: #c7d5ea;
+    opacity: 0.9;
+    margin: 0;
+}
+
+.output-view {
+    flex: 1;
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.output-view pre {
+    margin: 0;
+    flex: 1;
+    overflow: auto;
 }

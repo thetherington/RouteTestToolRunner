@@ -1,24 +1,31 @@
-import { type FC, type ReactElement, type ReactNode } from "react";
+import { useState } from "react";
 
-import IconCopy from "../icons/IconCopy";
-import IconDisk from "../icons/IconDisk";
-import Button from "./Button";
 import styles from "./Output.module.css";
+import OutputView from "./OutputView";
+import TableView from "./TableView";
 
-import {
-    capitalizeFirstLetter,
-    copyToClipBoard,
-    saveToFile,
-} from "../util/utils";
-import { toast } from "react-toastify";
+import type { SlabLogs } from "../types/output";
+import { capitalizeFirstLetter } from "../util/utils";
+
+const formatDate = (date: string): string => {
+    return new Date(date).toLocaleString();
+};
 
 interface OutputProps {
-    children?: ReactNode;
-    badge?: "manual" | "scheduled" | undefined;
-    text: string;
+    outputText?: string;
+    outputData?: SlabLogs | undefined;
+    scheduleTime?: string;
+    badge?: "manual" | "scheduled";
 }
 
-const Output: FC<OutputProps> = ({ badge, text }): ReactElement => {
+const Output = ({
+    outputText = "",
+    badge,
+    outputData,
+    scheduleTime,
+}: OutputProps) => {
+    const [active, setActive] = useState<"output" | "table">("output");
+
     const badgeClass =
         badge == "manual"
             ? styles["manual"]
@@ -26,54 +33,63 @@ const Output: FC<OutputProps> = ({ badge, text }): ReactElement => {
             ? styles["scheduled"]
             : "";
 
-    const copy = async () => {
-        try {
-            await copyToClipBoard(text);
-            toast.success("Copied output to clipboard!");
-        } catch (error) {
-            toast.error("Failed to copy output.");
-        }
-    };
-
-    const save = () => {
-        saveToFile(text);
-        toast.success("Saved output to file!");
-    };
-
     return (
         <div className={styles["output-container"]}>
-            {badge && (
-                <span
-                    className={`${styles["output-source-badge"]} ${badgeClass} `}
-                >
-                    {badge == "manual"
-                        ? `${capitalizeFirstLetter(badge)} Run`
-                        : `${capitalizeFirstLetter(badge)} Job`}
-                </span>
-            )}
+            <div className={styles["tabsBar"]}>
+                <div className={styles["tabsLeft"]}>
+                    <button
+                        type="button"
+                        className={`${styles.tab} ${
+                            active === "table" ? styles["tabActive"] : ""
+                        }`}
+                        onClick={() => setActive("table")}
+                        aria-pressed={active === "table"}
+                    >
+                        Table View
+                    </button>
 
-            <pre>{text}</pre>
-            {text.trim().length > 0 && (
-                <>
-                    <Button
-                        variant="copy"
-                        icon
-                        className={styles.copyBtn}
-                        onClick={copy}
+                    <button
+                        type="button"
+                        className={`${styles.tab} ${
+                            active === "output" ? styles["tabActive"] : ""
+                        }`}
+                        onClick={() => setActive("output")}
+                        aria-pressed={active === "output"}
                     >
-                        Copy
-                        <IconCopy />
-                    </Button>
-                    <Button
-                        variant="save"
-                        icon
-                        className={styles.saveBtn}
-                        onClick={save}
-                    >
-                        <IconDisk />
-                    </Button>
-                </>
-            )}
+                        Output View
+                    </button>
+                </div>
+
+                <div className={styles["tabsRight"]}>
+                    {badge && (
+                        <span
+                            className={`${styles["output-source-badge"]} ${badgeClass} `}
+                        >
+                            {badge == "manual"
+                                ? `${capitalizeFirstLetter(badge)} Run`
+                                : `${capitalizeFirstLetter(badge)} Job`}
+                        </span>
+                    )}
+                    {scheduleTime && !badge && (
+                        <span
+                            className={`${styles["output-source-badge"]} ${styles["scheduled"]}`}
+                        >
+                            Report for: {formatDate(scheduleTime)}
+                        </span>
+                    )}
+                </div>
+            </div>
+
+            <div className={styles["output-panel"]}>
+                {active === "output" ? (
+                    <OutputView outputText={outputText} />
+                ) : (
+                    <TableView
+                        outputData={outputData}
+                        scheduleTime={scheduleTime}
+                    />
+                )}
+            </div>
         </div>
     );
 };
