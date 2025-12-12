@@ -1,4 +1,6 @@
+import { toast } from "react-toastify";
 import type { JobResultResponse } from "../api/jobApi";
+import type { SlabLogs } from "../types/output";
 
 export function capitalizeFirstLetter(inputString: string): string {
     if (!inputString) {
@@ -18,6 +20,31 @@ export function formatOutput(results: JobResultResponse): string {
     outputParts.push(`Slab:\n${results.SlabOutput}\n\n`);
     outputParts.push(seperator);
     outputParts.push(`${results.Error ? "\nError: " + results.Error : ""}`);
+
+    const slabJson = results.structured?.json?.slab;
+
+    let parsedSlabLogs: SlabLogs | undefined = undefined;
+
+    if (slabJson) {
+        try {
+            parsedSlabLogs = JSON.parse(slabJson) as SlabLogs;
+        } catch (error) {
+            console.error("Error parsing slab JSON:", error);
+        }
+    }
+
+    console.log(
+        "Parsed Slab Logs:",
+        parsedSlabLogs?.mcast,
+        parsedSlabLogs?.source,
+        parsedSlabLogs?.destinations
+    );
+
+    // const out = JSON.parse(
+    //     JSON.parse(JSON.stringify(results.structured?.json?.slab ?? {}))
+    // );
+
+    // console.log(out);
 
     return outputParts.join("");
 }
@@ -70,4 +97,38 @@ export function saveToFile(results: string) {
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
     }, 150);
+}
+
+export function unmarshalSlabLogs(
+    data: string | undefined
+): SlabLogs | undefined {
+    let parsedSlabLogs: SlabLogs | undefined = undefined;
+
+    if (data) {
+        try {
+            parsedSlabLogs = JSON.parse(data) as SlabLogs;
+        } catch (error) {
+            toast.error("Error parsing slab JSON");
+        }
+    }
+
+    return parsedSlabLogs;
+}
+
+export function extractEventStartTime(payload: string): string | null {
+    const regex = /Event Start Time: (\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z)/;
+    const match = payload.match(regex);
+    return match ? match[1] : null;
+}
+
+export function createCSVFileName(t: string): string {
+    const today = new Date(t);
+    const pad = (n: number): string => (n < 10 ? "0" + n : "" + n);
+    const dateStr =
+        today.getFullYear() +
+        "-" +
+        pad(today.getMonth() + 1) +
+        "-" +
+        pad(today.getDate());
+    return `RouteTestResult_${dateStr}.csv`;
 }

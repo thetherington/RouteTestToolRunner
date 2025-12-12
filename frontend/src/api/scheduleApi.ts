@@ -1,3 +1,4 @@
+import type { StructuredOutput } from "../types/output";
 import type { IExtendedOptions, Schedule } from "../types/schedule";
 
 export type SchedulesResponse = {
@@ -7,6 +8,8 @@ export type SchedulesResponse = {
 export type ScheduleReport = {
     output: string;
     RunType: string;
+    structured?: StructuredOutput;
+    runTime?: string;
 };
 
 export type CreateScheduleParams = {

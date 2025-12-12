@@ -1,3 +1,5 @@
+import type { StructuredOutput } from "../types/output";
+
 export type VersionResponse = {
     version: string;
 };
@@ -16,6 +18,8 @@ export type JobResultResponse = {
     Step: number;
     Running: boolean;
     RunType: "manual" | "scheduled" | undefined;
+    structured?: StructuredOutput;
+    runTime?: string;
 };
 
 export type JobStopResult = {

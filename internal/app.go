@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -17,6 +18,10 @@ import (
 
 var AppVersion = "dev" // Default; will be overwritten by -ldflags at build time
 
+type StructuredOutput struct {
+	Json map[string]string `json:"json,omitempty"`
+}
+
 type JobResult struct {
 	SchedulerOutput string
 	SDVNOutput      string
@@ -25,6 +30,8 @@ type JobResult struct {
 	Step            Step
 	Running         bool
 	RunType         RunType
+	Structured      StructuredOutput `json:"structured,omitempty"`
+	RunTime         *time.Time       `json:"runTime,omitempty"`
 }
 
 // App is the main application struct holding all state, config, and HTTP/router details.
@@ -95,7 +102,7 @@ func NewApp(config *AppConfig) (*App, error) {
 // 4 - Connect SSH to Magnum SDVN and execute the script to analyze the route logs
 // 5 - Execute local script to collect the slab logs
 func (app *App) ExecuteRunnerTasks(ctx context.Context, runType RunType, config ...FileConfig) JobResult {
-	result := JobResult{Running: false, RunType: runType}
+	result := JobResult{Running: false, RunType: runType, Structured: StructuredOutput{Json: make(map[string]string)}}
 
 	checkErr := func(e error, descr string, output string) {
 		if ctx.Err() == context.Canceled {
@@ -167,10 +174,13 @@ func (app *App) ExecuteRunnerTasks(ctx context.Context, runType RunType, config 
 	// ------- Step 5: Run local script for Slab logs
 	app.SetJobActivity("Preparing to run local script", step.five)
 	localTarget := LocalJobTarget{
-		Label:    "slab",
-		Commands: cfg.Slab.Commands,
+		Label:        "slab",
+		Commands:     cfg.Slab.Commands,
+		isStructured: true,
 	}
-	result.SlabOutput, err = localRunCmd(ctx, app, localTarget)
+	localResults, err := localRunCmd(ctx, app, localTarget)
+	result.SlabOutput = localResults.output
+	result.Structured.Json["slab"] = localResults.structuredOutput
 	if err != nil {
 		checkErr(err, "Slab script", result.SlabOutput)
 		return result

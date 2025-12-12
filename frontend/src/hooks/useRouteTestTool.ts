@@ -6,13 +6,13 @@ import {
     fetchVersion,
     sendRunJob,
     sendStopJob,
+    type JobResultResponse,
 } from "../api/jobApi";
-import { formatOutput } from "../util/utils";
 import { toast } from "react-toastify";
 
-type StateMutate = React.Dispatch<React.SetStateAction<string>>;
+type StateMutate = (setOutput: JobResultResponse) => void;
 
-const useRouteTestTool = (setOutputText: StateMutate) => {
+const useRouteTestTool = (setOutput: StateMutate) => {
     const [jobCompleted, setJobCompleted] = useState(false);
     const [jobRunning, setJobRunning] = useState(false);
     const [intervalTime, setIntervalTime] = useState<number | false>(false);
@@ -65,7 +65,7 @@ const useRouteTestTool = (setOutputText: StateMutate) => {
 
     const getLastJobResult = () => {
         fetchResults();
-        setOutputText(formatOutput(results!));
+        setOutput(results!);
         setJobCompleted(true);
     };
 

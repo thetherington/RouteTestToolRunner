@@ -6,6 +6,7 @@ import {
     type FC,
     type ReactNode,
 } from "react";
+import type { ScheduleReport } from "../api/scheduleApi";
 import { useRouteTestScheduler } from "../hooks/useRouteTestScheduler";
 import type { IExtendedOptions, Schedule } from "../types/schedule";
 
@@ -54,7 +55,7 @@ const ScheduleContext = createContext<ScheduleContextType>({
 
 interface SchedulerProviderProps {
     children: ReactNode;
-    reportLoadCallBack: (output: string) => void;
+    reportLoadCallBack: (report: ScheduleReport) => void;
 }
 
 export const ScheduleContextProvider: FC<SchedulerProviderProps> = ({
@@ -129,7 +130,7 @@ export const ScheduleContextProvider: FC<SchedulerProviderProps> = ({
 
     const fetchScheduleResult = async (id: string): Promise<void> => {
         const resp = await getReport(id);
-        reportLoadCallBack(resp.output);
+        reportLoadCallBack(resp);
     };
 
     const clearError = () => {
